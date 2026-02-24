@@ -28,7 +28,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .withUsername(u.getEmail())
                 .password(u.getPassword())
                 .authorities(authorities)
-                .disabled(u.getEnabled() == null || !u.getEnabled())
+                .disabled(false) // Ne pas bloquer sur le champ enabled
                 .build();
     }
 }

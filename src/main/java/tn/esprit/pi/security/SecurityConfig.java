@@ -57,8 +57,10 @@ public class SecurityConfig {
                         .requestMatchers("/sponsors/admin/**").hasRole("ADMIN")
                         .requestMatchers("/cart/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")        // Admin venue routes
-                        .requestMatchers("/api/venues/**").hasRole("VENUE_OWNER") // Owner venue routes
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")         // Admin backoffice
+                        .requestMatchers("/venue/**").hasRole("VENUE_OWNER")       // VenueController
+                        .requestMatchers("/cars/**").authenticated()               // CarController
+                        .requestMatchers("/carpoolings/**").authenticated()        // CarpoolingController
                         .requestMatchers("/coach/**").hasRole("COACH")
                         .requestMatchers("/referee/**").hasRole("REFEREE")
                         .requestMatchers("/health/**").hasRole("HEALTH_PROFESSIONAL")
