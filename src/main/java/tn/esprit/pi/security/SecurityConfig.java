@@ -28,8 +28,6 @@ public class SecurityConfig {
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthFilter jwtAuthFilter;
 
-    // ─── Authentication Provider ──────────────────────────────────────────────
-
     @Bean
     public DaoAuthenticationProvider authProvider() {
         DaoAuthenticationProvider p = new DaoAuthenticationProvider(userDetailsService);
@@ -37,14 +35,10 @@ public class SecurityConfig {
         return p;
     }
 
-    // ─── Authentication Manager ───────────────────────────────────────────────
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
-    // ─── Security Filter Chain ────────────────────────────────────────────────
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -63,10 +57,11 @@ public class SecurityConfig {
                         .requestMatchers("/sponsors/admin/**").hasRole("ADMIN")
                         .requestMatchers("/cart/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")        // Admin venue routes
+                        .requestMatchers("/api/venues/**").hasRole("VENUE_OWNER") // Owner venue routes
                         .requestMatchers("/coach/**").hasRole("COACH")
                         .requestMatchers("/referee/**").hasRole("REFEREE")
                         .requestMatchers("/health/**").hasRole("HEALTH_PROFESSIONAL")
-                        .requestMatchers("/venue/**").hasRole("VENUE_OWNER")
                         .requestMatchers("/shops/**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -75,20 +70,15 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ─── CORS Configuration ───────────────────────────────────────────────────
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
         config.setAllowedOrigins(List.of("http://localhost:4200"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
         return source;
     }
 }
