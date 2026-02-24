@@ -24,11 +24,11 @@ public class MedicalRecord {
     
     @OneToOne
     @JoinColumn(name = "player_id")
-    private Player player;
+    private PlayerProfile playerProfile;
     
     @ManyToOne
     @JoinColumn(name = "health_professional_id")
-    private HealthProfessional healthProfessional;
+    private HealthProfessionalProfile healthProfessionalProfile;
     
     @OneToMany(mappedBy = "medicalRecord")
     private Set<Injury> injuries;

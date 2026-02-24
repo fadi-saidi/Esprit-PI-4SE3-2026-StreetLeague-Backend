@@ -20,7 +20,7 @@ public class Post {
     
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private AppUser user;
+    private User user;
     
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private Set<Comment> comments;

@@ -9,15 +9,17 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Badge {
+public class Shop {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
     private String name;
-    private String icon;
-    private Integer pointsRequired;
+    private String description;
+    private String address;
+    private String contactEmail;
+    private String phoneNumber;
     
-    @ManyToMany(mappedBy = "badges")
-    private Set<User> users;
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL)
+    private Set<Product> products;
 }

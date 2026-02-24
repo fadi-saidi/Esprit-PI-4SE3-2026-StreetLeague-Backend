@@ -22,7 +22,7 @@ public class VirtualTeam {
     
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private AppUser user;
+    private User user;
     
     @OneToMany(mappedBy = "virtualTeam")
     private Set<OwnedPlayer> ownedPlayers;

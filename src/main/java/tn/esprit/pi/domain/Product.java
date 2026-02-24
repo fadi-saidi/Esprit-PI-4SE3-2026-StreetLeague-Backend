@@ -1,5 +1,6 @@
 package tn.esprit.pi.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Set;
@@ -18,10 +19,17 @@ public class Product {
     private Double price;
     private Integer stock;
     private String category;
+    private String image;
     
     @Enumerated(EnumType.STRING)
     private SportType sportType;
     
-    @ManyToMany(mappedBy = "products")
-    private Set<Cart> carts;
+    @ManyToOne
+    @JoinColumn(name = "shop_id")
+    @JsonIgnore
+    private Shop shop;
+    
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Set<CartItem> cartItems;
 }

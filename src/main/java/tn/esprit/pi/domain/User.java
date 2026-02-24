@@ -6,13 +6,12 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
-@Table(name = "app_user")
-@Inheritance(strategy = InheritanceType.JOINED)
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppUser {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -65,4 +64,26 @@ public class AppUser {
     
     @OneToMany(mappedBy = "user")
     private Set<Reservation> reservations;
+    
+    // Profile relationships
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private CoachProfile coachProfile;
+    
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private PlayerProfile playerProfile;
+    
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private RefereeProfile refereeProfile;
+    
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private HealthProfessionalProfile healthProfessionalProfile;
+    
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private SponsorProfile sponsorProfile;
+    
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private VenueOwnerProfile venueOwnerProfile;
+    
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private AdminProfile adminProfile;
 }

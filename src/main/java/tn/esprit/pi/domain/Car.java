@@ -21,7 +21,7 @@ public class Car {
     
     @ManyToOne
     @JoinColumn(name = "driver_id")
-    private AppUser driver;
+    private User driver;
     
     @OneToMany(mappedBy = "car")
     private Set<Carpooling> carpoolings;

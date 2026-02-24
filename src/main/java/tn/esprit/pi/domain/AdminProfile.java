@@ -8,6 +8,14 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Admin extends AppUser {
+public class AdminProfile {
+    @Id
+    private Long id;
+    
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "user_id")
+    private User user;
+    
     private Integer roleLevel;
 }

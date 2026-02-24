@@ -5,6 +5,7 @@ import lombok.*;
 import java.util.Set;
 
 @Entity
+@Table(name = "sport_match")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,7 +21,7 @@ public class Match extends Event {
     
     @ManyToOne
     @JoinColumn(name = "referee_id")
-    private Referee referee;
+    private RefereeProfile refereeProfile;
     
     @ManyToOne
     @JoinColumn(name = "tournament_id")

@@ -9,12 +9,20 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class HealthProfessional extends AppUser {
+public class RefereeProfile {
+    @Id
+    private Long id;
+    
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "user_id")
+    private User user;
+    
     private String certificate;
-    private String specialty;
+    private Integer experienceYears;
     private String licenseNumber;
     private Boolean verified;
     
-    @OneToMany(mappedBy = "healthProfessional")
-    private Set<MedicalRecord> medicalRecords;
+    @OneToMany(mappedBy = "refereeProfile")
+    private Set<Match> matches;
 }

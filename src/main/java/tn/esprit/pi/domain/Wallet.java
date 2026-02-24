@@ -21,7 +21,7 @@ public class Wallet {
     
     @OneToOne
     @JoinColumn(name = "user_id")
-    private AppUser user;
+    private User user;
     
     @OneToMany(mappedBy = "wallet")
     private Set<Transaction> transactions;

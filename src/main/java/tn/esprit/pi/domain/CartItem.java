@@ -3,27 +3,26 @@ package tn.esprit.pi.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
-import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Cart {
+public class CartItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    private LocalDateTime createdAt;
-    private Double totalAmount;
+    private Integer quantity;
+    private Double subtotal;
     
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "cart_id")
     @JsonIgnore
-    private User user;
+    private Cart cart;
     
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)
-    private Set<CartItem> cartItems;
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
 }

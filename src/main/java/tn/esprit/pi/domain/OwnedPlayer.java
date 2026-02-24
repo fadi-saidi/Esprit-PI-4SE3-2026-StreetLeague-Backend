@@ -21,7 +21,7 @@ public class OwnedPlayer {
     
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private AppUser user;
+    private User user;
     
     @ManyToOne
     @JoinColumn(name = "virtual_team_id")

@@ -1,5 +1,6 @@
 package tn.esprit.pi.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -23,7 +24,8 @@ public class Sponsorship {
     
     @ManyToOne
     @JoinColumn(name = "sponsor_id")
-    private Sponsor sponsor;
+    @JsonIgnoreProperties({"sponsorships", "password", "wallet", "badges", "posts", "comments", "likes", "carts", "cars", "virtualTeams", "ownedPlayers", "rewards", "reservations"})
+    private SponsorProfile sponsorProfile;
     
     @ManyToOne
     @JoinColumn(name = "team_id")

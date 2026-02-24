@@ -9,11 +9,19 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VenueOwner extends AppUser {
+public class VenueOwnerProfile {
+    @Id
+    private Long id;
+    
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "user_id")
+    private User user;
+    
     private String companyName;
     private String phone;
     private Boolean verified;
     
-    @OneToMany(mappedBy = "venueOwner")
+    @OneToMany(mappedBy = "venueOwnerProfile")
     private Set<Venue> venues;
 }

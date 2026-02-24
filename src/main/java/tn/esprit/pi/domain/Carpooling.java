@@ -28,5 +28,5 @@ public class Carpooling {
     @JoinTable(name = "carpooling_participant",
         joinColumns = @JoinColumn(name = "carpooling_id"),
         inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private Set<AppUser> participants;
+    private Set<User> participants;
 }

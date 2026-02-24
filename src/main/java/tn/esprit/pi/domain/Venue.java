@@ -24,7 +24,7 @@ public class Venue {
     
     @ManyToOne
     @JoinColumn(name = "venue_owner_id")
-    private VenueOwner venueOwner;
+    private VenueOwnerProfile venueOwnerProfile;
     
     @OneToMany(mappedBy = "venue")
     private Set<Reservation> reservations;

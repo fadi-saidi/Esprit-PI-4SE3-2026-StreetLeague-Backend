@@ -26,11 +26,11 @@ public class Team {
     @JoinTable(name = "team_player",
         joinColumns = @JoinColumn(name = "team_id"),
         inverseJoinColumns = @JoinColumn(name = "player_id"))
-    private Set<Player> players;
+    private Set<PlayerProfile> playerProfiles;
     
     @ManyToOne
     @JoinColumn(name = "coach_id")
-    private Coach coach;
+    private CoachProfile coachProfile;
     
     @ManyToMany(mappedBy = "teams")
     private Set<Match> matches;
