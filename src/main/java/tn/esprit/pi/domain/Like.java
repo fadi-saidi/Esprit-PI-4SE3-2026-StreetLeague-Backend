@@ -24,4 +24,8 @@ public class Like {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+    @PrePersist
+    public void onCreate() {
+        this.creationDate = LocalDateTime.now();
+    }
 }

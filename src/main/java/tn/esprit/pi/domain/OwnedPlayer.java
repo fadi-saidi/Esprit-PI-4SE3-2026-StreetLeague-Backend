@@ -22,7 +22,9 @@ public class OwnedPlayer {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-    
+    @ManyToOne
+    @JoinColumn(name = "player_profile_id")
+    private PlayerProfile playerProfile;
     @ManyToOne
     @JoinColumn(name = "virtual_team_id")
     private VirtualTeam virtualTeam;

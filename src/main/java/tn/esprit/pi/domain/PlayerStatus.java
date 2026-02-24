@@ -1,5 +1,6 @@
 package tn.esprit.pi.domain;
 
 public enum PlayerStatus {
-    STARTER, SUBSTITUTE, BENCH
+    TITULAIRE,   // Starter
+    REMPLACANT   // Substitute
 }

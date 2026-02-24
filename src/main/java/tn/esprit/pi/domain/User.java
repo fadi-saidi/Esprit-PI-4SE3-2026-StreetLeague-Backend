@@ -1,5 +1,6 @@
 package tn.esprit.pi.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -39,6 +40,7 @@ public class User {
     private Set<Badge> badges;
     
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private Set<Post> posts;
     
     @OneToMany(mappedBy = "user")
@@ -54,9 +56,11 @@ public class User {
     private Set<Car> cars;
     
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private Set<VirtualTeam> virtualTeams;
     
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private Set<OwnedPlayer> ownedPlayers;
     
     @OneToMany(mappedBy = "user")

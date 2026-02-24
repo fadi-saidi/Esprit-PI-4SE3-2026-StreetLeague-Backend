@@ -27,4 +27,8 @@ public class Post {
     
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private Set<Like> likes;
+    @PrePersist
+    public void onCreate() {
+        this.creationDate = LocalDateTime.now();
+    }
 }
