@@ -3,6 +3,7 @@ package tn.esprit.pi.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.pi.domain.Like;
+import tn.esprit.pi.dto.LikeDto;
 import tn.esprit.pi.service.ILikeService;
 
 import java.util.List;
@@ -17,8 +18,16 @@ public class LikeController {
 
     // Create Like
     @PostMapping
-    public Like createLike(@RequestBody Like like) {
-        return likeService.createLike(like);
+    public LikeDto createLike(@RequestBody Like like) {
+        Like savedLike = likeService.createLike(like);
+
+        LikeDto dto = new LikeDto();
+        dto.setId(savedLike.getId());
+        dto.setPostId(savedLike.getPost().getId());
+        dto.setUserId(savedLike.getUser().getId());
+        dto.setCreationDate(savedLike.getCreationDate());
+
+        return dto;
     }
 
     // Get all Likes

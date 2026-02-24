@@ -11,19 +11,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Like {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    private LocalDateTime creationDate;
-    
+
+    private LocalDateTime creationDate; // la date sera définie automatiquement
+
     @ManyToOne
-    @JoinColumn(name = "post_id")
+    @JoinColumn(name = "post_id", nullable = false)
     private Post post;
-    
+
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    // Définir la date automatiquement lors de la création
     @PrePersist
     public void onCreate() {
         this.creationDate = LocalDateTime.now();
