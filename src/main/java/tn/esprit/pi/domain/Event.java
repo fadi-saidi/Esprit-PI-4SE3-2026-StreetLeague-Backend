@@ -30,6 +30,5 @@ public abstract class Event {
     @OneToMany(mappedBy = "event")
     private Set<Sponsorship> sponsorships;
     
-    @OneToMany(mappedBy = "event")
-    private Set<Reservation> reservations;
+
 }

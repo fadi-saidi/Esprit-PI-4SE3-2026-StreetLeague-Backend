@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/sponsors/**").permitAll()
+                        .requestMatchers("/api/**").authenticated()
                         .requestMatchers("/sponsorships/pending", "/sponsorships/active").permitAll()
                         .requestMatchers("/sponsorships/submit", "/sponsorships/my-sponsorships", "/sponsorships/*/cancel").hasRole("SPONSOR")
                         .requestMatchers("/sponsorships/admin/**").hasRole("ADMIN")

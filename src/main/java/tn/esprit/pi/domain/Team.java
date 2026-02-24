@@ -16,9 +16,13 @@ public class Team {
     private Long id;
     
     private String name;
+
     private String logo;
+
     private LocalDateTime createdAt;
-    
+
+    private Integer id_capitaine;
+
     @Enumerated(EnumType.STRING)
     private SportType sportType;
     
