@@ -1,28 +1,25 @@
 package tn.esprit.pi.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
-import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Wallet {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    private Double balance;
-    private String currency;
-    private LocalDateTime lastUpdated;
-    
+
+    private int points;
+    @JsonIgnore
     @OneToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", unique = true)
     private User user;
-    
-    @OneToMany(mappedBy = "wallet")
-    private Set<Transaction> transactions;
 }

@@ -67,6 +67,7 @@ public class SecurityConfig {
                         .requestMatchers("/referee/**").hasRole("REFEREE")
                         .requestMatchers("/health/**").hasRole("HEALTH_PROFESSIONAL")
                         .requestMatchers("/venue/**").hasRole("VENUE_OWNER")
+                        .requestMatchers("/wallet/**").authenticated()
                         .requestMatchers("/shops/**").permitAll()
                         .anyRequest().authenticated()
                 )

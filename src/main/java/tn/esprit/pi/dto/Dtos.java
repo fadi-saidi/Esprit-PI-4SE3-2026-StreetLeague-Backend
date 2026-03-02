@@ -1,6 +1,11 @@
 package tn.esprit.pi.dto;
 
+import tn.esprit.pi.domain.InjurySeverity;
 import tn.esprit.pi.domain.Role;
+import tn.esprit.pi.domain.TransactionType;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class Dtos {
 
@@ -34,5 +39,48 @@ public class Dtos {
             String token,
             String email,
             String role
+    ) {}
+
+
+
+    // Request body for deposit and withdraw: { "amount": 50.0 }
+    public record DepositRequest(
+            Double amount
+    ) {}
+
+    // Request body for transfer: { "toUserId": 7, "amount": 20.0 }
+    public record TransferRequest(
+            Long toUserId,
+            Double amount
+    ) {}
+
+    // =========================================================
+    //  HEALTH DTOs
+    // =========================================================
+
+    public record MedicalRecordDTO(
+            Long id,
+            Double weight,
+            Double height,
+            String bloodType,
+            String chronicDiseases,
+            String allergies,
+            LocalDate lastCheckup,
+            Long playerProfileId,
+            Long healthProfessionalId
+    ) {}
+
+    public record InjuryDTO(
+            Long id,
+            String report,
+            String recommendation,
+            LocalDate date,
+            InjurySeverity severity,
+            Long medicalRecordId
+    ) {}
+
+    // Request body when doctor adds advice: { "recommendation": "Rest for 2 weeks." }
+    public record RecommendationRequest(
+            String recommendation
     ) {}
 }
