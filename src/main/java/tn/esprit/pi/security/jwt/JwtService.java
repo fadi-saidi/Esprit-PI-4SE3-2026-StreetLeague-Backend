@@ -22,13 +22,10 @@ public class JwtService {
 
     public JwtService(
             @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration-ms}") long expirationMs
-    ) {
+            @Value("${app.jwt.expiration-ms}") long expirationMs) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
     }
-
-    // ─── Generate Token ───────────────────────────────────────────────────────
 
     public String generateToken(UserDetails userDetails) {
         String role = userDetails.getAuthorities().stream()
@@ -40,7 +37,7 @@ public class JwtService {
         Date exp = new Date(now.getTime() + expirationMs);
 
         return Jwts.builder()
-                .subject(userDetails.getUsername()) // username = email
+                .subject(userDetails.getUsername())
                 .claims(Map.of("role", role))
                 .issuedAt(now)
                 .expiration(exp)
@@ -48,13 +45,9 @@ public class JwtService {
                 .compact();
     }
 
-    // ─── Extract Email ────────────────────────────────────────────────────────
-
     public String extractEmail(String token) {
         return parseClaims(token).getSubject();
     }
-
-    // ─── Validate Token ───────────────────────────────────────────────────────
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
@@ -65,14 +58,10 @@ public class JwtService {
         }
     }
 
-    // ─── Check Expiration ─────────────────────────────────────────────────────
-
     private boolean isTokenExpired(String token) {
         Date exp = parseClaims(token).getExpiration();
         return exp.before(new Date());
     }
-
-    // ─── Parse Claims ─────────────────────────────────────────────────────────
 
     private Claims parseClaims(String token) {
         return Jwts.parser()

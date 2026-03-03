@@ -3,7 +3,7 @@ package tn.esprit.pi.service;
 import tn.esprit.pi.dto.TrainingDTO;
 import tn.esprit.pi.entity.Tournoi;
 import tn.esprit.pi.entity.Training;
-import tn.esprit.pi.exception.ResourceNotFoundException;
+import tn.esprit.pi.exception.RessourceNotFoundException;
 import tn.esprit.pi.repository.TournoiRepository;
 import tn.esprit.pi.repository.TrainingRepository;
 import lombok.RequiredArgsConstructor;
@@ -54,17 +54,20 @@ public class TrainingService {
 
     @Transactional
     public void delete(Long id) {
-        if (!trainingRepository.existsById(id)) throw new ResourceNotFoundException("Training", id);
+        if (!trainingRepository.existsById(id))
+            throw new RessourceNotFoundException("Training", id);
         trainingRepository.deleteById(id);
     }
 
     private Training getOrThrow(Long id) {
-        return trainingRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Training", id));
+        return trainingRepository.findById(id).orElseThrow(() -> new RessourceNotFoundException("Training", id));
     }
 
     private Tournoi resolveTournoi(Long tournoiId) {
-        if (tournoiId == null) return null;
-        return tournoiRepository.findById(tournoiId).orElseThrow(() -> new ResourceNotFoundException("Tournoi", tournoiId));
+        if (tournoiId == null)
+            return null;
+        return tournoiRepository.findById(tournoiId)
+                .orElseThrow(() -> new RessourceNotFoundException("Tournoi", tournoiId));
     }
 
     private TrainingDTO toDTO(Training t) {

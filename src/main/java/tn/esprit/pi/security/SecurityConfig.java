@@ -28,8 +28,6 @@ public class SecurityConfig {
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthFilter jwtAuthFilter;
 
-    // ─── Authentication Provider ──────────────────────────────────────────────
-
     @Bean
     public DaoAuthenticationProvider authProvider() {
         DaoAuthenticationProvider p = new DaoAuthenticationProvider(userDetailsService);
@@ -37,14 +35,10 @@ public class SecurityConfig {
         return p;
     }
 
-    // ─── Authentication Manager ───────────────────────────────────────────────
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
-    // ─── Security Filter Chain ────────────────────────────────────────────────
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -58,7 +52,9 @@ public class SecurityConfig {
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/sponsors/**").permitAll()
                         .requestMatchers("/sponsorships/pending", "/sponsorships/active").permitAll()
-                        .requestMatchers("/sponsorships/submit", "/sponsorships/my-sponsorships", "/sponsorships/*/cancel").hasRole("SPONSOR")
+                        .requestMatchers("/sponsorships/submit", "/sponsorships/my-sponsorships",
+                                "/sponsorships/*/cancel")
+                        .hasRole("SPONSOR")
                         .requestMatchers("/sponsorships/admin/**").hasRole("ADMIN")
                         .requestMatchers("/sponsors/admin/**").hasRole("ADMIN")
                         .requestMatchers("/cart/**").authenticated()
@@ -68,14 +64,11 @@ public class SecurityConfig {
                         .requestMatchers("/health/**").hasRole("HEALTH_PROFESSIONAL")
                         .requestMatchers("/venue/**").hasRole("VENUE_OWNER")
                         .requestMatchers("/shops/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
-    // ─── CORS Configuration ───────────────────────────────────────────────────
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

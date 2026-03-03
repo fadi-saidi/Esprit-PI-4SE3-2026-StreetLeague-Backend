@@ -4,35 +4,33 @@ import tn.esprit.pi.domain.Role;
 
 public class Dtos {
 
-    public record RegisterRequest(
-            String fullName,
-            String email,
-            String password,
-            Role role,
-            // Player
-            String dateOfBirth,
-            // Health Professional, Referee, Coach
-            String certificate,
-            String licenseNumber,
-            String specialty,
-            Integer experienceYears,
-            // Sponsor
-            String companyName,
-            String logo,
-            String contactEmail,
-            Double budget,
-            // Venue Owner
-            String phone
-    ) {}
+        public record RegisterRequest(
+                        String fullName,
+                        String email,
+                        String password,
+                        Role role,
+                        String dateOfBirth,
+                        String certificate,
+                        String licenseNumber,
+                        String specialty,
+                        Integer experienceYears,
 
-    public record LoginRequest(
-            String email,
-            String password
-    ) {}
+                        String companyName,
+                        String logo,
+                        String contactEmail,
+                        Double budget,
 
-    public record AuthResponse(
-            String token,
-            String email,
-            String role
-    ) {}
+                        String phone) {
+        }
+
+        public record LoginRequest(
+                        String email,
+                        String password) {
+        }
+
+        public record AuthResponse(
+                        String token,
+                        String email,
+                        String role) {
+        }
 }

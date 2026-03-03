@@ -2,7 +2,7 @@ package tn.esprit.pi.service;
 
 import tn.esprit.pi.dto.EvenementDTO;
 import tn.esprit.pi.entity.Evenement;
-import tn.esprit.pi.exception.ResourceNotFoundException;
+import tn.esprit.pi.exception.RessourceNotFoundException;
 import tn.esprit.pi.repository.EvenementRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ public class EvenementService {
     }
 
     private Evenement getOrThrow(Long id) {
-        return evenementRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Evenement", id));
+        return evenementRepository.findById(id).orElseThrow(() -> new RessourceNotFoundException("Evenement", id));
     }
 
     private EvenementDTO toDTO(Evenement e) {

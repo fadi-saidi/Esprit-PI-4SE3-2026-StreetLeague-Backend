@@ -25,3 +25,12 @@ application-dev.properties
 .mvn/
 mvnw
 mvnw.cmd
+
+# AI Generated documentation/logs
+CLEAN_BUILD.txt
+FIX_APPLIED.md
+FRONTEND_MIGRATION_GUIDE.md
+MIGRATION_GUIDE.md
+MIGRATION_PROGRESS.md
+READY_TO_TEST.md
+compile_utf8.log

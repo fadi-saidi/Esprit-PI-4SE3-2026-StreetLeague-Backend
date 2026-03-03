@@ -3,7 +3,7 @@ package tn.esprit.pi.service;
 import tn.esprit.pi.dto.MatchDTO;
 import tn.esprit.pi.entity.Match;
 import tn.esprit.pi.entity.Tournoi;
-import tn.esprit.pi.exception.ResourceNotFoundException;
+import tn.esprit.pi.exception.RessourceNotFoundException;
 import tn.esprit.pi.repository.MatchRepository;
 import tn.esprit.pi.repository.TournoiRepository;
 import lombok.RequiredArgsConstructor;
@@ -55,17 +55,20 @@ public class MatchService {
 
     @Transactional
     public void delete(Long id) {
-        if (!matchRepository.existsById(id)) throw new ResourceNotFoundException("Match", id);
+        if (!matchRepository.existsById(id))
+            throw new RessourceNotFoundException("Match", id);
         matchRepository.deleteById(id);
     }
 
     private Match getOrThrow(Long id) {
-        return matchRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Match", id));
+        return matchRepository.findById(id).orElseThrow(() -> new RessourceNotFoundException("Match", id));
     }
 
     private Tournoi resolveTournoi(Long tournoiId) {
-        if (tournoiId == null) return null;
-        return tournoiRepository.findById(tournoiId).orElseThrow(() -> new ResourceNotFoundException("Tournoi", tournoiId));
+        if (tournoiId == null)
+            return null;
+        return tournoiRepository.findById(tournoiId)
+                .orElseThrow(() -> new RessourceNotFoundException("Tournoi", tournoiId));
     }
 
     private MatchDTO toDTO(Match m) {
