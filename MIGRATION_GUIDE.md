@@ -1,10 +1,10 @@
-# Migration Guide: Single User Table + Profile Tables
+﻿# Migration Guide: Single User Table + Profile Tables
 
-## ✅ Completed Steps
+## âœ… Completed Steps
 
 ### 1. Domain Layer - DONE
-- ✅ Created `User` entity (replaces AppUser)
-- ✅ Created 7 Profile entities:
+- âœ… Created `User` entity (replaces AppUser)
+- âœ… Created 7 Profile entities:
   - `CoachProfile`
   - `PlayerProfile`
   - `RefereeProfile`
@@ -12,21 +12,21 @@
   - `SponsorProfile`
   - `VenueOwnerProfile`
   - `AdminProfile`
-- ✅ Updated all related entities to reference profiles instead of role entities
+- âœ… Updated all related entities to reference profiles instead of role entities
 
 ### 2. Updated Entities
-- ✅ Team → references CoachProfile, PlayerProfile
-- ✅ Training → references CoachProfile, PlayerProfile
-- ✅ Match → references RefereeProfile
-- ✅ MedicalRecord → references PlayerProfile, HealthProfessionalProfile
-- ✅ Sponsorship → references SponsorProfile
-- ✅ Venue → references VenueOwnerProfile
-- ✅ Wallet, Post, Comment, Like, Cart → reference User
-- ✅ Car, VirtualTeam, OwnedPlayer, Reward, Reservation → reference User
+- âœ… Team â†’ references CoachProfile, PlayerProfile
+- âœ… Training â†’ references CoachProfile, PlayerProfile
+- âœ… Match â†’ references RefereeProfile
+- âœ… MedicalRecord â†’ references PlayerProfile, HealthProfessionalProfile
+- âœ… Sponsorship â†’ references SponsorProfile
+- âœ… Venue â†’ references VenueOwnerProfile
+- âœ… Wallet, Post, Comment, Like, Cart â†’ reference User
+- âœ… Car, VirtualTeam, OwnedPlayer, Reward, Reservation â†’ reference User
 
 ---
 
-## 🔄 Next Steps (What YOU Need to Do)
+## ðŸ”„ Next Steps (What YOU Need to Do)
 
 ### Step 3: Update Repositories
 You need to update/create repositories for the new structure.
@@ -79,14 +79,14 @@ public interface AdminProfileRepository extends JpaRepository<AdminProfile, Long
 ```
 
 #### Delete Old Repositories:
-- ❌ Delete `AppUserRepository.java`
-- ❌ Delete `CoachRepository.java`
-- ❌ Delete `PlayerRepository.java`
-- ❌ Delete `RefereeRepository.java`
-- ❌ Delete `HealthProfessionalRepository.java`
-- ❌ Delete `SponsorRepository.java`
-- ❌ Delete `VenueOwnerRepository.java`
-- ❌ Delete `AdminRepository.java`
+- âŒ Delete `AppUserRepository.java`
+- âŒ Delete `CoachRepository.java`
+- âŒ Delete `PlayerRepository.java`
+- âŒ Delete `RefereeRepository.java`
+- âŒ Delete `HealthProfessionalRepository.java`
+- âŒ Delete `SponsorRepository.java`
+- âŒ Delete `VenueOwnerRepository.java`
+- âŒ Delete `AdminRepository.java`
 
 ---
 
@@ -133,13 +133,13 @@ public class AuthService {
 ```
 
 #### Update All Services:
-- Update `CoachService` → use `UserRepository` + `CoachProfileRepository`
-- Update `PlayerService` → use `UserRepository` + `PlayerProfileRepository`
-- Update `RefereeService` → use `UserRepository` + `RefereeProfileRepository`
-- Update `HealthProfessionalService` → use `UserRepository` + `HealthProfessionalProfileRepository`
-- Update `SponsorService` → use `UserRepository` + `SponsorProfileRepository`
-- Update `VenueOwnerService` → use `UserRepository` + `VenueOwnerProfileRepository`
-- Update `AdminService` → use `UserRepository` + `AdminProfileRepository`
+- Update `CoachService` â†’ use `UserRepository` + `CoachProfileRepository`
+- Update `PlayerService` â†’ use `UserRepository` + `PlayerProfileRepository`
+- Update `RefereeService` â†’ use `UserRepository` + `RefereeProfileRepository`
+- Update `HealthProfessionalService` â†’ use `UserRepository` + `HealthProfessionalProfileRepository`
+- Update `SponsorService` â†’ use `UserRepository` + `SponsorProfileRepository`
+- Update `VenueOwnerService` â†’ use `UserRepository` + `VenueOwnerProfileRepository`
+- Update `AdminService` â†’ use `UserRepository` + `AdminProfileRepository`
 
 ---
 
@@ -318,46 +318,46 @@ spring.jpa.hibernate.ddl-auto=update
 - [ ] Test user login and JWT generation
 - [ ] Test profile retrieval for each role
 - [ ] Test profile updates
-- [ ] Test relationships (Team → Coach, Match → Referee, etc.)
+- [ ] Test relationships (Team â†’ Coach, Match â†’ Referee, etc.)
 - [ ] Test authorization (role-based access)
 - [ ] Test existing features (posts, comments, wallet, etc.)
 
 ---
 
-## 📝 Summary of Changes
+## ðŸ“ Summary of Changes
 
 ### Before (Inheritance):
 ```
 AppUser (base)
-├── Coach extends AppUser
-├── Player extends AppUser
-├── Referee extends AppUser
-└── ... (5 more)
+â”œâ”€â”€ Coach extends AppUser
+â”œâ”€â”€ Player extends AppUser
+â”œâ”€â”€ Referee extends AppUser
+â””â”€â”€ ... (5 more)
 ```
 
 ### After (Composition):
 ```
 User (single table)
-├── CoachProfile (one-to-one)
-├── PlayerProfile (one-to-one)
-├── RefereeProfile (one-to-one)
-└── ... (5 more profiles)
+â”œâ”€â”€ CoachProfile (one-to-one)
+â”œâ”€â”€ PlayerProfile (one-to-one)
+â”œâ”€â”€ RefereeProfile (one-to-one)
+â””â”€â”€ ... (5 more profiles)
 ```
 
 ### Benefits:
-✅ Faster authentication (no joins on login)
-✅ Cleaner user management
-✅ Easier to add new roles
-✅ Better separation of concerns
+âœ… Faster authentication (no joins on login)
+âœ… Cleaner user management
+âœ… Easier to add new roles
+âœ… Better separation of concerns
 
 ### Trade-offs:
-⚠️ More repositories to manage
-⚠️ Need to fetch profile separately
-⚠️ Migration effort required
+âš ï¸ More repositories to manage
+âš ï¸ Need to fetch profile separately
+âš ï¸ Migration effort required
 
 ---
 
-## 🚨 Important Notes
+## ðŸš¨ Important Notes
 
 1. **Don't delete old entities yet** - Keep them until migration is complete
 2. **Test thoroughly** - This is a major structural change
@@ -374,3 +374,4 @@ If you encounter issues:
 2. Verify repository methods
 3. Test with Postman before frontend integration
 4. Check database constraints and foreign keys
+

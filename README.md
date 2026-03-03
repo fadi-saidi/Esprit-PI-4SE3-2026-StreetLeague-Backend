@@ -1,4 +1,4 @@
-# Street League - Amateur Sports Platform
+﻿# Street League - Amateur Sports Platform
 
 A unified digital platform for amateur sports management with JWT authentication and role-based access control.
 
@@ -67,3 +67,4 @@ spring.datasource.password=
 - Role-based authorization
 - CORS enabled for Angular frontend (localhost:4200)
 - Password encryption with BCrypt
+
