@@ -131,7 +131,6 @@ public class IAuthServiceImp implements IAuthService {
         );
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(req.email());
-
         String token = jwtService.generateToken(userDetails);
 
         String role = userDetails.getAuthorities().stream()
@@ -139,6 +138,27 @@ public class IAuthServiceImp implements IAuthService {
                 .orElseThrow(() -> new IllegalStateException("No roles found"))
                 .getAuthority();
 
-        return new AuthResponse(token, userDetails.getUsername(), role);
+        // Récupérer le profileId selon le rôle
+        User user = userRepository.findByEmail(req.email())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Long profileId = null;
+        switch (user.getRole()) {
+            case PLAYER -> profileId = playerProfileRepository
+                    .findByUserId(user.getId())
+                    .map(PlayerProfile::getId)
+                    .orElse(null);
+            case HEALTH_PROFESSIONAL -> profileId = healthProfessionalProfileRepository
+                    .findByUserId(user.getId())
+                    .map(HealthProfessionalProfile::getId)
+                    .orElse(null);
+            case COACH -> profileId = coachProfileRepository
+                    .findByUserId(user.getId())
+                    .map(CoachProfile::getId)
+                    .orElse(null);
+            default -> profileId = null;
+        }
+
+        return new AuthResponse(token, userDetails.getUsername(), role, profileId);
     }
 }

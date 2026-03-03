@@ -80,7 +80,6 @@ public class HealthServiceImpl implements IHealthService {
         injury.setDate(dto.date());
         injury.setSeverity(dto.severity());
         injury.setMedicalRecord(record);
-        // recommendation is intentionally null here — doctor fills it in separately
 
         return toInjuryDTO(injuryRepo.save(injury));
     }
@@ -122,15 +121,18 @@ public class HealthServiceImpl implements IHealthService {
                 .orElseThrow(() -> new RuntimeException("Injury not found with id: " + id)));
     }
 
+    @Override
+    public List<InjuryDTO> getAllInjuries() {
+        return injuryRepo.findAll()
+                .stream()
+                .map(this::toInjuryDTO)
+                .collect(Collectors.toList());
+    }
+
     // ----------------------------------------------------------
     //  Private helpers
     // ----------------------------------------------------------
 
-    /**
-     * Copies DTO values into the entity.
-     * Used by both create and update to avoid duplicating code.
-     * Note: Records use dto.fieldName() — no "get" prefix.
-     */
     private void mapDtoToEntity(MedicalRecordDTO dto, MedicalRecord record) {
         record.setWeight(dto.weight());
         record.setHeight(dto.height());
@@ -154,10 +156,6 @@ public class HealthServiceImpl implements IHealthService {
         }
     }
 
-    /**
-     * MedicalRecord entity → MedicalRecordDTO record.
-     * Records are instantiated with new MedicalRecordDTO(...) — all fields in constructor order.
-     */
     private MedicalRecordDTO toDTO(MedicalRecord r) {
         return new MedicalRecordDTO(
                 r.getId(),
@@ -173,9 +171,6 @@ public class HealthServiceImpl implements IHealthService {
         );
     }
 
-    /**
-     * Injury entity → InjuryDTO record.
-     */
     private InjuryDTO toInjuryDTO(Injury i) {
         return new InjuryDTO(
                 i.getId(),
@@ -185,5 +180,13 @@ public class HealthServiceImpl implements IHealthService {
                 i.getSeverity(),
                 i.getMedicalRecord() != null ? i.getMedicalRecord().getId() : null
         );
+    }
+
+    @Override
+    public List<MedicalRecordDTO> getAllRecords() {
+        return medicalRecordRepo.findAll()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 }

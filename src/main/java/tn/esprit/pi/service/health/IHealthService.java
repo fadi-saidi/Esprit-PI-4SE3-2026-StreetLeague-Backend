@@ -8,7 +8,6 @@ import java.util.List;
 
 public interface IHealthService {
 
-
     MedicalRecordDTO createRecord(MedicalRecordDTO dto);
 
     // Player or healthProfessionnal updates
@@ -40,4 +39,9 @@ public interface IHealthService {
 
     // Get a single injury by ID
     InjuryDTO getInjuryById(Long id);
+
+    // Get ALL injuries across all players — used by health professional dashboard
+    List<InjuryDTO> getAllInjuries();
+
+    List<MedicalRecordDTO> getAllRecords();
 }

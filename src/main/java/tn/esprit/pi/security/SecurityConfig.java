@@ -54,6 +54,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/medical/**").hasAnyRole("PLAYER", "HEALTH_PROFESSIONAL", "COACH", "ADMIN")
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/sponsors/**").permitAll()
