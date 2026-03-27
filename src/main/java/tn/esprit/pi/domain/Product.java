@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.Set;
 
+// Transient fields populated at query time (not persisted)
+
 @Entity
 @Getter
 @Setter
@@ -32,4 +34,14 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @JsonIgnore
     private Set<CartItem> cartItems;
+    
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Set<ProductReview> reviews;
+
+    @Transient
+    private Integer reviewCount;
+
+    @Transient
+    private Double averageRating;
 }

@@ -1,0 +1,423 @@
+@startuml Street_League_Class_Diagram
+
+' ============ ENUMS ============
+enum Role {
+  ADMIN
+  PLAYER
+  COACH
+  REFEREE
+  HEALTH_PROFESSIONAL
+  SPONSOR
+  VENUE_OWNER
+}
+
+enum SportType {
+  FOOTBALL
+  BASKETBALL
+  TENNIS
+  ...
+}
+
+enum EventStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum PlayerLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  PROFESSIONAL
+}
+
+enum PlayerStatus {
+  ACTIVE
+  INJURED
+  SUSPENDED
+}
+
+enum InjurySeverity {
+  MINOR
+  MODERATE
+  SEVERE
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum SponsorshipStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  REJECTED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  PAYMENT
+  REFUND
+}
+
+enum RewardSource {
+  MATCH
+  TOURNAMENT
+  TRAINING
+  ACHIEVEMENT
+}
+
+' ============ CORE USER SYSTEM ============
+class User {
+  - id: Long
+  - username: String
+  - phone: String
+  - email: String
+  - password: String
+  - role: Role
+  - enabled: Boolean
+  - address: String
+  - rank: Integer
+  - createdAt: LocalDateTime
+}
+
+' ============ USER PROFILES ============
+class AdminProfile {
+  - id: Long
+  - roleLevel: Integer
+}
+
+class PlayerProfile {
+  - id: Long
+  - dateOfBirth: LocalDate
+  - level: PlayerLevel
+}
+
+class CoachProfile {
+  - id: Long
+  - certificate: String
+  - experienceYears: Integer
+  - specialty: String
+  - verified: Boolean
+}
+
+class RefereeProfile {
+  - id: Long
+  - certificate: String
+  - experienceYears: Integer
+  - licenseNumber: String
+  - verified: Boolean
+}
+
+class HealthProfessionalProfile {
+  - id: Long
+  - certificate: String
+  - specialty: String
+  - licenseNumber: String
+  - verified: Boolean
+}
+
+class SponsorProfile {
+  - id: Long
+  - companyName: String
+  - logo: String
+  - contactEmail: String
+  - budget: Double
+}
+
+class VenueOwnerProfile {
+  - id: Long
+  - companyName: String
+  - phone: String
+  - verified: Boolean
+}
+
+' ============ FINANCIAL SYSTEM ============
+class Wallet {
+  - id: Long
+  - balance: Double
+  - currency: String
+  - lastUpdated: LocalDateTime
+}
+
+class Transaction {
+  - id: Long
+  - type: TransactionType
+  - amount: Double
+  - date: LocalDateTime
+  - status: String
+}
+
+' ============ TEAM & EVENT SYSTEM ============
+class Team {
+  - id: Long
+  - name: String
+  - logo: String
+  - createdAt: LocalDateTime
+  - sportType: SportType
+}
+
+abstract class Event {
+  - id: Long
+  - title: String
+  - date: LocalDateTime
+  - duration: Integer
+  - location: String
+  - sportType: SportType
+  - status: EventStatus
+}
+
+class Match {
+  - score: String
+}
+
+class Tournament {
+  - name: String
+  - numberOfTeams: Integer
+  - phase: String
+  - prize: Double
+}
+
+class Training {
+  - description: String
+  - maxParticipants: Integer
+}
+
+' ============ VENUE SYSTEM ============
+class Venue {
+  - id: Long
+  - name: String
+  - address: String
+  - pricePerHour: Double
+  - capacity: Integer
+  - sportType: SportType
+}
+
+class Reservation {
+  - id: Long
+  - date: LocalDateTime
+  - duration: Integer
+  - price: Double
+  - status: ReservationStatus
+}
+
+' ============ HEALTH SYSTEM ============
+class MedicalRecord {
+  - id: Long
+  - weight: Double
+  - height: Double
+  - bloodType: String
+  - chronicDiseases: String
+  - allergies: String
+  - lastCheckup: LocalDate
+}
+
+class Injury {
+  - id: Long
+  - report: String
+  - recommendation: String
+  - date: LocalDate
+  - severity: InjurySeverity
+}
+
+' ============ SPONSORSHIP SYSTEM ============
+class Sponsorship {
+  - id: Long
+  - amount: Double
+  - startDate: LocalDate
+  - endDate: LocalDate
+  - status: SponsorshipStatus
+}
+
+' ============ COMMUNITY SYSTEM ============
+class Post {
+  - id: Long
+  - content: String
+  - creationDate: LocalDateTime
+}
+
+class Comment {
+  - id: Long
+  - content: String
+  - creationDate: LocalDateTime
+}
+
+class Like {
+  - id: Long
+  - creationDate: LocalDateTime
+}
+
+class Badge {
+  - id: Long
+  - name: String
+  - icon: String
+  - pointsRequired: Integer
+}
+
+' ============ SHOP SYSTEM ============
+class Shop {
+  - id: Long
+  - name: String
+  - description: String
+  - address: String
+  - contactEmail: String
+  - phoneNumber: String
+}
+
+class Product {
+  - id: Long
+  - name: String
+  - price: Double
+  - stock: Integer
+  - category: String
+  - image: String
+  - sportType: SportType
+}
+
+class Cart {
+  - id: Long
+  - createdAt: LocalDateTime
+  - totalAmount: Double
+}
+
+class CartItem {
+  - id: Long
+  - quantity: Integer
+  - subtotal: Double
+}
+
+' ============ CARPOOLING SYSTEM ============
+class Car {
+  - id: Long
+  - model: String
+  - seats: Integer
+  - availableSeats: Integer
+  - plateNumber: String
+}
+
+class Carpooling {
+  - id: Long
+  - route: String
+  - date: LocalDate
+  - departureTime: LocalTime
+}
+
+' ============ FANTASY SPORTS SYSTEM ============
+class VirtualTeam {
+  - id: Long
+  - sportType: SportType
+  - earnedPoints: Double
+  - weekPoints: Double
+}
+
+class OwnedPlayer {
+  - id: Long
+  - status: PlayerStatus
+  - acquiredDate: LocalDate
+}
+
+class Reward {
+  - id: Long
+  - source: RewardSource
+  - bonus: Double
+  - week: Integer
+  - date: LocalDate
+}
+
+' ============ RELATIONSHIPS ============
+
+' User to Profiles (One-to-One)
+User "1" -- "0..1" AdminProfile
+User "1" -- "0..1" PlayerProfile
+User "1" -- "0..1" CoachProfile
+User "1" -- "0..1" RefereeProfile
+User "1" -- "0..1" HealthProfessionalProfile
+User "1" -- "0..1" SponsorProfile
+User "1" -- "0..1" VenueOwnerProfile
+
+' User to Wallet (One-to-One)
+User "1" -- "1" Wallet
+
+' User to Badges (Many-to-Many)
+User "*" -- "*" Badge
+
+' User to Community
+User "1" -- "*" Post
+User "1" -- "*" Comment
+User "1" -- "*" Like
+
+' User to Cart
+User "1" -- "*" Cart
+
+' User to Carpooling
+User "1" -- "*" Car : driver
+User "*" -- "*" Carpooling : participants
+
+' User to Fantasy Sports
+User "1" -- "*" VirtualTeam
+User "1" -- "*" OwnedPlayer
+User "1" -- "*" Reward
+
+' User to Reservations
+User "1" -- "*" Reservation
+
+' Wallet to Transactions
+Wallet "1" -- "*" Transaction
+
+' Team Relationships
+Team "*" -- "*" PlayerProfile
+Team "*" -- "1" CoachProfile
+Team "*" -- "*" Match
+Team "*" -- "*" Tournament
+Team "1" -- "*" Sponsorship
+
+' Event Hierarchy
+Event <|-- Match
+Event <|-- Tournament
+Event <|-- Training
+
+' Event Relationships
+Event "1" -- "*" Sponsorship
+Event "1" -- "*" Reservation
+
+' Match Relationships
+Match "*" -- "1" RefereeProfile
+Match "*" -- "0..1" Tournament
+
+' Training Relationships
+Training "*" -- "1" CoachProfile
+Training "*" -- "*" PlayerProfile : participants
+
+' Health System
+PlayerProfile "1" -- "0..1" MedicalRecord
+MedicalRecord "*" -- "1" HealthProfessionalProfile
+MedicalRecord "1" -- "*" Injury
+
+' Venue System
+VenueOwnerProfile "1" -- "*" Venue
+Venue "1" -- "*" Reservation
+Venue "1" -- "*" Sponsorship
+
+' Sponsorship System
+SponsorProfile "1" -- "*" Sponsorship
+
+' Post System
+Post "1" -- "*" Comment
+Post "1" -- "*" Like
+
+' Shop System
+Shop "1" -- "*" Product
+Cart "1" -- "*" CartItem
+CartItem "*" -- "1" Product
+
+' Carpooling System
+Car "1" -- "*" Carpooling
+
+' Fantasy Sports
+VirtualTeam "1" -- "*" OwnedPlayer
+
+@enduml

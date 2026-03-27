@@ -11,6 +11,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(of = "id")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,7 +48,7 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Set<Like> likes;
     
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Cart> carts;
     
     @OneToMany(mappedBy = "driver")
@@ -64,6 +65,12 @@ public class User {
     
     @OneToMany(mappedBy = "user")
     private Set<Reservation> reservations;
+    
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Order> orders;
+    
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ProductReview> productReviews;
     
     // Profile relationships
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)

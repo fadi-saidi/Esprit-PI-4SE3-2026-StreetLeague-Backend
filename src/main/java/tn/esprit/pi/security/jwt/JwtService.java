@@ -40,8 +40,8 @@ public class JwtService {
         Date exp = new Date(now.getTime() + expirationMs);
 
         return Jwts.builder()
-                .subject(userDetails.getUsername()) // username = email
                 .claims(Map.of("role", role))
+                .subject(userDetails.getUsername()) // username = email — must come after .claims()
                 .issuedAt(now)
                 .expiration(exp)
                 .signWith(key, Jwts.SIG.HS256)

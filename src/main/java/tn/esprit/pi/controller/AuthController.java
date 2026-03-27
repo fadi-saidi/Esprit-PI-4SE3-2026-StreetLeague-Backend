@@ -34,4 +34,14 @@ public class AuthController {
             return ResponseEntity.status(401).body("Invalid email or password");
         }
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me(org.springframework.security.core.Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(java.util.Map.of(
+                "email", auth.getName(),
+                "roles", auth.getAuthorities().stream()
+                        .map(a -> a.getAuthority()).toList()
+        ));
+    }
 }

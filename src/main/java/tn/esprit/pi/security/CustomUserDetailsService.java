@@ -28,7 +28,10 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .withUsername(u.getEmail())
                 .password(u.getPassword())
                 .authorities(authorities)
-                .disabled(u.getEnabled() == null || !u.getEnabled())
+                .accountExpired(false)
+                .accountLocked(false)
+                .credentialsExpired(false)
+                .disabled(false)
                 .build();
     }
 }
