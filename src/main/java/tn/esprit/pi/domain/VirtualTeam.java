@@ -3,6 +3,9 @@ package tn.esprit.pi.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -15,7 +18,7 @@ public class VirtualTeam {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    private String name;
     @Enumerated(EnumType.STRING)
     private SportType sportType;
 
@@ -26,6 +29,8 @@ public class VirtualTeam {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "virtualTeam", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<OwnedPlayer> ownedPlayers;
+    @ElementCollection
+    @CollectionTable(name = "virtual_team_player_ids", joinColumns = @JoinColumn(name = "virtual_team_id"))
+    @Column(name = "player_id")
+    private List<Long> playerIds = new ArrayList<>();
 }

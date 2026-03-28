@@ -9,6 +9,7 @@ import java.util.List;
 public class VirtualTeamDto {
 
     private SportType sportType;
+    private String name;
     private Long userId;
     private List<Long> playerIds;
     private Double earnedPoints;

@@ -1,15 +1,13 @@
 package tn.esprit.pi.dto;
 
 import lombok.Data;
-import tn.esprit.pi.domain.LikeType;
-
 import java.time.LocalDateTime;
 
 @Data
-public class LikeDto {
+public class PostDto {
     private Long id;
-    private Long postId;
-    private LikeType likeType;
-    private Long userId;
+    private String content;
     private LocalDateTime creationDate;
+    private Long userId;
+    private String username;
 }

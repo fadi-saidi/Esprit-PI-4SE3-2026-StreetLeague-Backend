@@ -31,13 +31,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // No token → continue without authentication (public endpoints)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extract raw token (remove "Bearer " prefix)
         String token = authHeader.substring(7);
         String email;
 
@@ -48,10 +46,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Validate and set authentication context
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
             if (jwtService.isTokenValid(token, userDetails)) {
                 var authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()

@@ -7,12 +7,12 @@ public class VirtualTeamConfig {
     public static final Map<SportType, Integer> MAX_STARTERS = Map.of(
             SportType.FOOTBALL, 11,
             SportType.BASKETBALL, 5,
-            SportType.HANDBALL, 7
+            SportType.TENNIS, 1
     );
 
     public static final Map<SportType, Integer> MAX_SUBSTITUTES = Map.of(
             SportType.FOOTBALL, 4,
             SportType.BASKETBALL, 2,
-            SportType.HANDBALL, 3
+            SportType.TENNIS, 2
     );
 }

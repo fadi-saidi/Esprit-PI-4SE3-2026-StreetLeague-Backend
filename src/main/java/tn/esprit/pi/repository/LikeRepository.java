@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface LikeRepository extends JpaRepository<Like, Long> {
 
+
     List<Like> findByPostId(Long postId);
 
     List<Like> findByUserId(Long userId);

@@ -3,6 +3,7 @@ package tn.esprit.pi.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -17,6 +18,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import tn.esprit.pi.security.jwt.JwtAuthFilter;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -28,8 +30,6 @@ public class SecurityConfig {
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthFilter jwtAuthFilter;
 
-    // ─── Authentication Provider ──────────────────────────────────────────────
-
     @Bean
     public DaoAuthenticationProvider authProvider() {
         DaoAuthenticationProvider p = new DaoAuthenticationProvider(userDetailsService);
@@ -37,58 +37,47 @@ public class SecurityConfig {
         return p;
     }
 
-    // ─── Authentication Manager ───────────────────────────────────────────────
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    // ─── Security Filter Chain ────────────────────────────────────────────────
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // CORS EN PREMIER
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/virtual-teams/**").permitAll()
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/sponsors/**").permitAll()
-                        .requestMatchers("/sponsorships/pending", "/sponsorships/active").permitAll()
-                        .requestMatchers("/sponsorships/submit", "/sponsorships/my-sponsorships", "/sponsorships/*/cancel").hasRole("SPONSOR")
-                        .requestMatchers("/sponsorships/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/sponsors/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/shops/**").permitAll()
+                        .requestMatchers("/user/me").authenticated()
                         .requestMatchers("/cart/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/coach/**").hasRole("COACH")
-                        .requestMatchers("/referee/**").hasRole("REFEREE")
-                        .requestMatchers("/health/**").hasRole("HEALTH_PROFESSIONAL")
-                        .requestMatchers("/venue/**").hasRole("VENUE_OWNER")
-                        .requestMatchers("/shops/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ─── CORS Configuration ───────────────────────────────────────────────────
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
         config.setAllowedOrigins(List.of("http://localhost:4200"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
         return source;
     }
 }
