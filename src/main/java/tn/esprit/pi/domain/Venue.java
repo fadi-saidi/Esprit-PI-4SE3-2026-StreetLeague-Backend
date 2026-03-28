@@ -26,9 +26,9 @@ public class Venue {
     @JoinColumn(name = "venue_owner_id")
     private VenueOwnerProfile venueOwnerProfile;
     
-    @OneToMany(mappedBy = "venue")
+    @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Reservation> reservations;
     
-    @OneToMany(mappedBy = "venue")
+    @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Sponsorship> sponsorships;
 }

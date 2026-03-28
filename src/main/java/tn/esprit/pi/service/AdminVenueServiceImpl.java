@@ -5,12 +5,10 @@ import org.springframework.stereotype.Service;
 import tn.esprit.pi.domain.Venue;
 import tn.esprit.pi.domain.VenueOwnerProfile;
 import tn.esprit.pi.dto.VenueDTO;
-import tn.esprit.pi.dto.VenueOwnerWithVenuesDTO;
 import tn.esprit.pi.repository.VenueOwnerProfileRepository;
 import tn.esprit.pi.repository.VenueRepository;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,8 +16,6 @@ public class AdminVenueServiceImpl implements IAdminVenueService {
 
     private final VenueRepository venueRepository;
     private final VenueOwnerProfileRepository venueOwnerProfileRepository;
-
-    // ─── Mappers ──────────────────────────────────────────────────────────────
 
     private VenueDTO toVenueDTO(Venue v) {
         return VenueDTO.builder()
@@ -32,84 +28,65 @@ public class AdminVenueServiceImpl implements IAdminVenueService {
                 .build();
     }
 
-    private VenueOwnerWithVenuesDTO toOwnerWithVenuesDTO(VenueOwnerProfile owner) {
-        List<VenueDTO> venues = owner.getVenues() != null
-                ? owner.getVenues().stream().map(this::toVenueDTO).collect(Collectors.toList())
-                : List.of();
-
-        return VenueOwnerWithVenuesDTO.builder()
-                .ownerId(owner.getId())
-                .ownerEmail(owner.getUser().getEmail())
-                .ownerUsername(owner.getUser().getUsername())
-                .ownerPhone(owner.getPhone())
-                .companyName(owner.getCompanyName())
-                .verified(owner.getVerified())
-                .venues(venues)
-                .build();
-    }
-
-    // ─── Owners avec leurs Venues ─────────────────────────────────────────────
-
     @Override
-    public List<VenueOwnerWithVenuesDTO> getAllOwnersWithVenues() {
-        return venueOwnerProfileRepository.findAll()
-                .stream()
-                .map(this::toOwnerWithVenuesDTO)
-                .collect(Collectors.toList());
+    public List<VenueDTO> getAllVenues() {
+        return venueRepository.findAll().stream()
+                .map(this::toVenueDTO)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Override
-    public VenueOwnerWithVenuesDTO getOwnerWithVenues(Long ownerId) {
+    public VenueDTO createVenueForOwner(Long ownerId, VenueDTO dto) {
         VenueOwnerProfile owner = venueOwnerProfileRepository.findById(ownerId)
-                .orElseThrow(() -> new RuntimeException("Owner not found: " + ownerId));
-        return toOwnerWithVenuesDTO(owner);
+                .orElseThrow(() -> new RuntimeException("Venue Owner not found: " + ownerId));
+
+        Venue venue = new Venue();
+        venue.setName(dto.getName());
+        venue.setAddress(dto.getAddress());
+        venue.setPricePerHour(dto.getPricePerHour());
+        venue.setCapacity(dto.getCapacity());
+        venue.setSportType(dto.getSportType());
+        venue.setVenueOwnerProfile(owner);
+
+        return toVenueDTO(venueRepository.save(venue));
     }
 
-    // ─── Actions sur les Venues (pas d'ajout) ────────────────────────────────
-
     @Override
-    public VenueDTO updateVenue(Long venueId, VenueDTO dto) {
+    public VenueDTO updateVenueForOwner(Long venueId, Long ownerId, VenueDTO dto) {
+        VenueOwnerProfile owner = venueOwnerProfileRepository.findById(ownerId)
+                .orElseThrow(() -> new RuntimeException("Venue Owner not found: " + ownerId));
+
         Venue venue = venueRepository.findById(venueId)
                 .orElseThrow(() -> new RuntimeException("Venue not found: " + venueId));
+
+        // Ensure the venue belongs to the specified owner
+        if (venue.getVenueOwnerProfile() == null || !venue.getVenueOwnerProfile().getId().equals(ownerId)) {
+            throw new RuntimeException("Venue does not belong to the specified owner.");
+        }
 
         venue.setName(dto.getName());
         venue.setAddress(dto.getAddress());
         venue.setPricePerHour(dto.getPricePerHour());
         venue.setCapacity(dto.getCapacity());
         venue.setSportType(dto.getSportType());
+        venue.setVenueOwnerProfile(owner);
 
         return toVenueDTO(venueRepository.save(venue));
     }
 
     @Override
-    public void deleteVenue(Long venueId) {
+    public void deleteVenueForOwner(Long venueId, Long ownerId) {
+        VenueOwnerProfile owner = venueOwnerProfileRepository.findById(ownerId)
+                .orElseThrow(() -> new RuntimeException("Venue Owner not found: " + ownerId));
+
         Venue venue = venueRepository.findById(venueId)
                 .orElseThrow(() -> new RuntimeException("Venue not found: " + venueId));
+
+        // Ensure the venue belongs to the specified owner
+        if (venue.getVenueOwnerProfile() == null || !venue.getVenueOwnerProfile().getId().equals(ownerId)) {
+            throw new RuntimeException("Venue does not belong to the specified owner.");
+        }
+
         venueRepository.delete(venue);
-    }
-
-    // ─── Actions sur les Owners ───────────────────────────────────────────────
-
-    @Override
-    public VenueOwnerWithVenuesDTO verifyOwner(Long ownerId) {
-        VenueOwnerProfile owner = venueOwnerProfileRepository.findById(ownerId)
-                .orElseThrow(() -> new RuntimeException("Owner not found: " + ownerId));
-        owner.setVerified(true);
-        return toOwnerWithVenuesDTO(venueOwnerProfileRepository.save(owner));
-    }
-
-    @Override
-    public VenueOwnerWithVenuesDTO unverifyOwner(Long ownerId) {
-        VenueOwnerProfile owner = venueOwnerProfileRepository.findById(ownerId)
-                .orElseThrow(() -> new RuntimeException("Owner not found: " + ownerId));
-        owner.setVerified(false);
-        return toOwnerWithVenuesDTO(venueOwnerProfileRepository.save(owner));
-    }
-
-    @Override
-    public void deleteOwner(Long ownerId) {
-        VenueOwnerProfile owner = venueOwnerProfileRepository.findById(ownerId)
-                .orElseThrow(() -> new RuntimeException("Owner not found: " + ownerId));
-        venueOwnerProfileRepository.delete(owner);
     }
 }
