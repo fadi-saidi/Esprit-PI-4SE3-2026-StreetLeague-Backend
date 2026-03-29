@@ -30,4 +30,18 @@ public class AdminCarpoolingController {
     public ResponseEntity<DriverWithCarsAndCarpoolingsDTO> getDriver(@PathVariable Long driverId) {
         return ResponseEntity.ok(adminCarpoolingService.getDriverWithCarsAndCarpoolings(driverId));
     }
+
+    // DELETE /api/admin/carpoolings/cars/{carId}
+    @DeleteMapping("/cars/{carId}")
+    public ResponseEntity<Void> deleteCar(@PathVariable Long carId) {
+        adminCarpoolingService.deleteCar(carId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // DELETE /api/admin/carpoolings/{carpoolingId}
+    @DeleteMapping("/{carpoolingId}")
+    public ResponseEntity<Void> deleteCarpooling(@PathVariable Long carpoolingId) {
+        adminCarpoolingService.deleteCarpooling(carpoolingId);
+        return ResponseEntity.noContent().build();
+    }
 }

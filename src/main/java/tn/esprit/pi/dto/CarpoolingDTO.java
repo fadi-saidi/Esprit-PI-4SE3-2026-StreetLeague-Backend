@@ -12,7 +12,8 @@ import java.util.List;
 @Builder
 public class CarpoolingDTO {
     private Long id;
-    private String route;
+    private String departureLocation;
+    private String arrivalLocation;
     private LocalDate date;
     private LocalTime departureTime;
     private Long carId;
@@ -22,5 +23,6 @@ public class CarpoolingDTO {
     private String driverUsername;
     private String driverEmail;
     private List<String> participantUsernames;
+    private List<String> participantEmails;
     private Integer participantCount;
 }

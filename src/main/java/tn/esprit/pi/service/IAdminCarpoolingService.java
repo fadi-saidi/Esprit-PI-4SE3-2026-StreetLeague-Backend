@@ -11,4 +11,7 @@ public interface IAdminCarpoolingService {
 
     // Voir un driver specifique avec ses voitures et carpoolings
     DriverWithCarsAndCarpoolingsDTO getDriverWithCarsAndCarpoolings(Long driverId);
+
+    void deleteCar(Long carId);
+    void deleteCarpooling(Long carpoolingId);
 }

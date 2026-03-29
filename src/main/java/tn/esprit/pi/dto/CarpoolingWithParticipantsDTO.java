@@ -14,7 +14,8 @@ public class CarpoolingWithParticipantsDTO {
 
     // Infos du trajet
     private Long carpoolingId;
-    private String route;
+    private String departureLocation;
+    private String arrivalLocation;
     private LocalDate date;
     private LocalTime departureTime;
     private Integer participantCount;

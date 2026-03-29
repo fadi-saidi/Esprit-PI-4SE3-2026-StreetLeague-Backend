@@ -16,7 +16,8 @@ public class Carpooling {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    private String route;
+    private String departureLocation;
+    private String arrivalLocation;
     private LocalDate date;
     private LocalTime departureTime;
     

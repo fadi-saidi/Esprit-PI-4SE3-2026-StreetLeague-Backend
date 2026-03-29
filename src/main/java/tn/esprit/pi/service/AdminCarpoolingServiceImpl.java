@@ -7,6 +7,7 @@ import tn.esprit.pi.domain.Carpooling;
 import tn.esprit.pi.domain.User;
 import tn.esprit.pi.dto.*;
 import tn.esprit.pi.repository.CarRepository;
+import tn.esprit.pi.repository.CarpoolingRepository;
 import tn.esprit.pi.repository.UserRepository;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class AdminCarpoolingServiceImpl implements IAdminCarpoolingService {
 
     private final UserRepository userRepository;
     private final CarRepository carRepository;
+    private final CarpoolingRepository carpoolingRepository;
 
     // ─── Mappers ──────────────────────────────────────────────────────────────
 
@@ -39,7 +41,8 @@ public class AdminCarpoolingServiceImpl implements IAdminCarpoolingService {
 
         return CarpoolingWithParticipantsDTO.builder()
                 .carpoolingId(c.getId())
-                .route(c.getRoute())
+                .departureLocation(c.getDepartureLocation())
+                .arrivalLocation(c.getArrivalLocation())
                 .date(c.getDate())
                 .departureTime(c.getDepartureTime())
                 .participantCount(participants.size())
@@ -98,5 +101,41 @@ public class AdminCarpoolingServiceImpl implements IAdminCarpoolingService {
         User driver = userRepository.findById(driverId)
                 .orElseThrow(() -> new RuntimeException("Driver not found: " + driverId));
         return toDriverDTO(driver);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteCar(Long carId) {
+        Car car = carRepository.findById(carId)
+                .orElseThrow(() -> new RuntimeException("Car not found"));
+        
+        // Remove associated carpoolings first to avoid foreign key violations
+        if (car.getCarpoolings() != null) {
+            car.getCarpoolings().forEach(cp -> {
+                cp.getParticipants().clear();
+                carpoolingRepository.delete(cp);
+            });
+        }
+        carRepository.delete(car);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteCarpooling(Long carpoolingId) {
+        Carpooling carpooling = carpoolingRepository.findById(carpoolingId)
+                .orElseThrow(() -> new RuntimeException("Carpooling not found"));
+        
+        // Remettre les places disponibles
+        Car car = carpooling.getCar();
+        if (car != null && carpooling.getParticipants() != null) {
+            car.setAvailableSeats(car.getAvailableSeats() + carpooling.getParticipants().size());
+            carRepository.save(car);
+        }
+        
+        // Vider les participants pour eviter FK constraint violation
+        if (carpooling.getParticipants() != null) {
+            carpooling.getParticipants().clear();
+        }
+        carpoolingRepository.delete(carpooling);
     }
 }

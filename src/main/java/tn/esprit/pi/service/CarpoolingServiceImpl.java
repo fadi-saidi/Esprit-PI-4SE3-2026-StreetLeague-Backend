@@ -36,9 +36,16 @@ public class CarpoolingServiceImpl implements ICarpoolingService {
                 .collect(Collectors.toList())
                 : List.of();
 
+        List<String> participantEmails = c.getParticipants() != null
+                ? c.getParticipants().stream()
+                .map(User::getEmail)
+                .collect(Collectors.toList())
+                : List.of();
+
         return CarpoolingDTO.builder()
                 .id(c.getId())
-                .route(c.getRoute())
+                .departureLocation(c.getDepartureLocation())
+                .arrivalLocation(c.getArrivalLocation())
                 .date(c.getDate())
                 .departureTime(c.getDepartureTime())
                 .carId(c.getCar().getId())
@@ -48,6 +55,7 @@ public class CarpoolingServiceImpl implements ICarpoolingService {
                 .driverUsername(c.getCar().getDriver().getUsername())
                 .driverEmail(c.getCar().getDriver().getEmail())
                 .participantUsernames(participants)
+                .participantEmails(participantEmails)
                 .participantCount(participants.size())
                 .build();
     }
@@ -63,7 +71,8 @@ public class CarpoolingServiceImpl implements ICarpoolingService {
                 .orElseThrow(() -> new RuntimeException("Car not found or does not belong to you"));
 
         Carpooling carpooling = new Carpooling();
-        carpooling.setRoute(dto.getRoute());
+        carpooling.setDepartureLocation(dto.getDepartureLocation());
+        carpooling.setArrivalLocation(dto.getArrivalLocation());
         carpooling.setDate(dto.getDate());
         carpooling.setDepartureTime(dto.getDepartureTime());
         carpooling.setCar(car);
@@ -158,6 +167,7 @@ public class CarpoolingServiceImpl implements ICarpoolingService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public void deleteCarpooling(Long carpoolingId, String email) {
         User driver = getUserByEmail(email);
         Carpooling carpooling = carpoolingRepository.findById(carpoolingId)
@@ -173,6 +183,9 @@ public class CarpoolingServiceImpl implements ICarpoolingService {
         car.setAvailableSeats(car.getAvailableSeats() + carpooling.getParticipants().size());
         carRepository.save(car);
 
+        // Clear references in the join table to avoid foreign key constraint violation
+        carpooling.getParticipants().clear();
+        
         carpoolingRepository.delete(carpooling);
     }
 }

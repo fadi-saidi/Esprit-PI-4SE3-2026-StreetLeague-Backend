@@ -41,7 +41,7 @@ public class JwtService {
 
         return Jwts.builder()
                 .subject(userDetails.getUsername()) // username = email
-                .claims(Map.of("role", role))
+                .claim("role", role)               // Use .claim() NOT .claims() to avoid overwriting subject
                 .issuedAt(now)
                 .expiration(exp)
                 .signWith(key, Jwts.SIG.HS256)
@@ -52,6 +52,12 @@ public class JwtService {
 
     public String extractEmail(String token) {
         return parseClaims(token).getSubject();
+    }
+
+    // ─── Extract Role ─────────────────────────────────────────────────────────
+
+    public String extractRole(String token) {
+        return parseClaims(token).get("role", String.class);
     }
 
     // ─── Validate Token ───────────────────────────────────────────────────────
