@@ -1,6 +1,5 @@
 package tn.esprit.pi.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,8 +17,12 @@ public class Wallet {
     private Long id;
 
     private int points;
-    @JsonIgnore
+
     @OneToOne
     @JoinColumn(name = "user_id", unique = true)
+    @JsonIgnoreProperties({"wallet", "password", "enabled", "authorities",
+            "accountNonExpired", "accountNonLocked", "credentialsNonExpired",
+            "adminProfile", "coachProfile", "healthProfessionalProfile",
+            "playerProfile", "refereeProfile", "sponsorProfile", "venueOwnerProfile"})
     private User user;
 }

@@ -2,7 +2,6 @@ package tn.esprit.pi.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,10 +17,11 @@ public class Transaction {
     private Long id;
 
     private double amount;
-
     private int earnedPoints;
-
     private LocalDateTime date;
+
+    @Enumerated(EnumType.STRING)
+    private TransactionType transactionType;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

@@ -3,8 +3,10 @@ package tn.esprit.pi.service.wallet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.pi.domain.Transaction;
+import tn.esprit.pi.domain.TransactionType;
 import tn.esprit.pi.domain.User;
 import tn.esprit.pi.domain.Wallet;
+import tn.esprit.pi.dto.Dtos;
 import tn.esprit.pi.dto.TransactionResponse;
 import tn.esprit.pi.repository.TransactionRepository;
 import tn.esprit.pi.repository.UserRepository;
@@ -22,8 +24,6 @@ public class WalletServiceImpl implements IWalletService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
 
-    // ─── Get or create wallet ─────────────────────────────────────────────────
-
     @Override
     public Wallet getOrCreateWallet(User user) {
         return walletRepository.findByUser(user).orElseGet(() ->
@@ -36,15 +36,11 @@ public class WalletServiceImpl implements IWalletService {
         );
     }
 
-    // ─── Get wallet (must exist) ──────────────────────────────────────────────
-
     @Override
     public Wallet getWallet(User user) {
         return walletRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Wallet not found for user: " + user.getEmail()));
     }
-
-    // ─── Deposit → earn points (1 point per 10 units) ────────────────────────
 
     @Override
     public Wallet deposit(User user, Double amount) {
@@ -60,13 +56,12 @@ public class WalletServiceImpl implements IWalletService {
                 .amount(amount)
                 .earnedPoints(earned)
                 .date(LocalDateTime.now())
+                .transactionType(TransactionType.DEPOSIT)
                 .user(user)
                 .build());
 
         return wallet;
     }
-
-    // ─── Withdraw → spend points ──────────────────────────────────────────────
 
     @Override
     public Wallet withdraw(User user, Double amount) {
@@ -86,13 +81,12 @@ public class WalletServiceImpl implements IWalletService {
                 .amount(-amount)
                 .earnedPoints(-pointsNeeded)
                 .date(LocalDateTime.now())
+                .transactionType(TransactionType.WITHDRAWAL)
                 .user(user)
                 .build());
 
         return wallet;
     }
-
-    // ─── Transfer points to another user ──────────────────────────────────────
 
     @Override
     public void transfer(User from, Long toUserId, Double amount) {
@@ -108,39 +102,42 @@ public class WalletServiceImpl implements IWalletService {
         if (fromWallet.getPoints() < points)
             throw new IllegalStateException("Insufficient points for transfer");
 
-        // Deduct from sender
         fromWallet.setPoints(fromWallet.getPoints() - points);
         walletRepository.save(fromWallet);
 
-        // Credit to receiver
         Wallet toWallet = getOrCreateWallet(to);
         toWallet.setPoints(toWallet.getPoints() + points);
         walletRepository.save(toWallet);
 
         LocalDateTime now = LocalDateTime.now();
 
-        // Log both transactions
         transactionRepository.save(Transaction.builder()
-                .amount(-amount).earnedPoints(-points).date(now).user(from).build());
+                .amount(-amount)
+                .earnedPoints(-points)
+                .date(now)
+                .transactionType(TransactionType.TRANSFER)
+                .user(from)
+                .build());
 
         transactionRepository.save(Transaction.builder()
-                .amount(amount).earnedPoints(points).date(now).user(to).build());
+                .amount(amount)
+                .earnedPoints(points)
+                .date(now)
+                .transactionType(TransactionType.TRANSFER)
+                .user(to)
+                .build());
     }
-
-    // ─── Transaction history ──────────────────────────────────────────────────
 
     @Override
     public List<TransactionResponse> getHistory(User user) {
-        List<Transaction> transactions = transactionRepository.findByUser(user);
-
-        return transactions.stream().map(t -> {
+        return transactionRepository.findByUser(user).stream().map(t -> {
             String type;
-            if (t.getAmount() > 0) {
-                type = "DEPOSIT";
-            } else if (t.getAmount() < 0) {
-                type = "WITHDRAWAL";
+            if (t.getTransactionType() != null) {
+                type = t.getTransactionType().name();
             } else {
-                type = "TRANSFER";
+                // fallback pour les anciens enregistrements sans type
+                if (t.getAmount() > 0) type = "DEPOSIT";
+                else type = "WITHDRAWAL";
             }
 
             return TransactionResponse.builder()
@@ -157,22 +154,16 @@ public class WalletServiceImpl implements IWalletService {
         }).collect(Collectors.toList());
     }
 
-    // ─── ADMIN: all wallets ───────────────────────────────────────────────────
-
     @Override
     public List<Wallet> getAllWallets() {
         return walletRepository.findAll();
     }
-
-    // ─── ADMIN: wallet by id ──────────────────────────────────────────────────
 
     @Override
     public Wallet getWalletById(Long id) {
         return walletRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Wallet not found with id: " + id));
     }
-
-    // ─── ADMIN: update points manually ───────────────────────────────────────
 
     @Override
     public Wallet updatePoints(Long id, int points) {
@@ -181,12 +172,26 @@ public class WalletServiceImpl implements IWalletService {
         return walletRepository.save(wallet);
     }
 
-    // ─── ADMIN: delete wallet ─────────────────────────────────────────────────
-
     @Override
     public void deleteWallet(Long id) {
         if (!walletRepository.existsById(id))
             throw new RuntimeException("Wallet not found with id: " + id);
         walletRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Dtos.WalletAdminDTO> getAllWalletsAdmin() {
+        return walletRepository.findAllWalletsRaw()
+                .stream()
+                .map(row -> new Dtos.WalletAdminDTO(
+                        row[0] != null ? ((Number) row[0]).longValue() : null,
+                        row[1] != null ? ((Number) row[1]).intValue() : 0,
+                        row[2] != null ? ((Number) row[2]).longValue() : null,
+                        row[3] != null ? (String) row[3] : "Unknown",
+                        row[4] != null ? (String) row[4] : "",
+                        row[5] != null ? (String) row[5] : "",
+                        row[6] != null ? (String) row[6] : ""
+                ))
+                .collect(Collectors.toList());
     }
 }

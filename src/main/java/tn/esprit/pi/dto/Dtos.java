@@ -84,4 +84,13 @@ public class Dtos {
     public record RecommendationRequest(
             String recommendation
     ) {}
+    public record WalletAdminDTO(
+            Long id,
+            int points,
+            Long userId,
+            String username,
+            String email,
+            String role,
+            String phone
+    ) {}
 }

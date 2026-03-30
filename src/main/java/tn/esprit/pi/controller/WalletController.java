@@ -76,32 +76,28 @@ public class WalletController {
     //  ADMIN endpoints  →  /wallet/admin/**
     // =========================================================
 
-    /** GET /wallet/admin/all */
     @GetMapping("/admin/all")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<Wallet>> getAllWallets() {
-        return ResponseEntity.ok(walletService.getAllWallets());
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    public ResponseEntity<List<Dtos.WalletAdminDTO>> getAllWallets() {
+        return ResponseEntity.ok(walletService.getAllWalletsAdmin());
     }
 
-    /** GET /wallet/admin/{id} */
     @GetMapping("/admin/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     public ResponseEntity<Wallet> getById(@PathVariable Long id) {
         return ResponseEntity.ok(walletService.getWalletById(id));
     }
 
-    /** PUT /wallet/admin/{id}/points?points=200 */
     @PutMapping("/admin/{id}/points")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     public ResponseEntity<Wallet> updatePoints(
             @PathVariable Long id,
             @RequestParam int points) {
         return ResponseEntity.ok(walletService.updatePoints(id, points));
     }
 
-    /** DELETE /wallet/admin/{id} */
     @DeleteMapping("/admin/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     public ResponseEntity<String> deleteWallet(@PathVariable Long id) {
         walletService.deleteWallet(id);
         return ResponseEntity.ok("Wallet deleted successfully");
