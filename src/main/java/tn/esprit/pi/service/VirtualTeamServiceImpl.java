@@ -1,5 +1,6 @@
 package tn.esprit.pi.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.pi.domain.*;
@@ -16,6 +17,7 @@ public class VirtualTeamServiceImpl implements IVirtualTeamService {
 
     private final VirtualTeamRepository teamRepository;
     private final UserRepository userRepository;
+    private final PredictionRepository predictionRepository;
 
     @Override
     public VirtualTeamResponse createVirtualTeam(VirtualTeamDto request) {
@@ -55,7 +57,9 @@ public class VirtualTeamServiceImpl implements IVirtualTeamService {
     }
 
     @Override
+    @Transactional
     public void deleteVirtualTeam(Long id) {
+        predictionRepository.deleteByVirtualTeamId(id);
         teamRepository.deleteById(id);
     }
 

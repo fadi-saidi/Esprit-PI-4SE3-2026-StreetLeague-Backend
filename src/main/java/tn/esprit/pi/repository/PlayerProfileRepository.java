@@ -2,6 +2,7 @@ package tn.esprit.pi.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import tn.esprit.pi.domain.PlayerProfile;
+import tn.esprit.pi.domain.SportType;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,4 +20,5 @@ public interface PlayerProfileRepository extends JpaRepository<PlayerProfile, Lo
 
     // Find a player profile by user ID
     Optional<PlayerProfile> findByUserId(Long userId);
+    List<PlayerProfile> findBySportType(SportType sportType);
 }

@@ -53,6 +53,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/virtual-teams/**").permitAll()
+                        .requestMatchers(
+                                "/player-profiles/**",
+                                "/predictions/**",
+                                "/owned-players/**"
+                        ).permitAll()
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/sponsors/**").permitAll()
                         .requestMatchers("/shops/**").permitAll()

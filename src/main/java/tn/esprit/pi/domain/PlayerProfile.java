@@ -22,10 +22,23 @@ public class PlayerProfile {
     private User user;
     
     private LocalDate dateOfBirth;
-    
+
+    @Enumerated(EnumType.STRING)
+    private SportType sportType;
+
+    private String position;
+
     @Enumerated(EnumType.STRING)
     private PlayerLevel level;
-    
+    // ── Stats fantasy ──────────────────────
+    private Integer goalsScored   = 0;
+    private Integer assists       = 0;
+    private Integer matchesPlayed = 0;
+    private Double  avgRating     = 0.0;
+    private Integer fantasyPoints = 0;
+    // ──────────────────────────────────────
+
+
     @OneToOne(mappedBy = "playerProfile", cascade = CascadeType.ALL)
     @JsonIgnoreProperties({"playerProfile"})
     private MedicalRecord medicalRecord;
