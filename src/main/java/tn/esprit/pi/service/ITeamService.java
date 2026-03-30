@@ -1,27 +1,33 @@
 package tn.esprit.pi.service;
 
-import tn.esprit.pi.domain.JoinRequest;
-import tn.esprit.pi.domain.Team;
-import tn.esprit.pi.domain.User;
+import tn.esprit.pi.dto.JoinRequestDTO;
+import tn.esprit.pi.dto.PlayerSummaryDTO;
+import tn.esprit.pi.dto.TeamDTO;
 
 import java.util.List;
 
 public interface ITeamService {
-    Team createTeam(Team team);
-    Team updateTeam(Long id, Team team);
-    Team getTeamById(Long id);
-    List<Team> getAllTeams();
-    void deleteTeam(Long id);
-    List<Team> getTeamsByUserId(Long userId);
 
-    JoinRequest requestJoin(Long teamId, Long playerId);
-    JoinRequest invitePlayer(Long teamId, Long playerId);
-    List<JoinRequest> getPendingRequestsForTeam(Long teamId);
-    List<JoinRequest> getInvitationsForPlayer(Long userId);
+    // ── CRUD ──────────────────────────────────────────────────────────────────
+    TeamDTO createTeam(TeamDTO dto);
+    TeamDTO updateTeam(Long id, TeamDTO dto);
+    TeamDTO getTeamById(Long id);
+    List<TeamDTO> getAllTeams();
+    void deleteTeam(Long id);
+    List<TeamDTO> getTeamsByUserId(Long userId);
+
+    // ── Join requests ─────────────────────────────────────────────────────────
+    JoinRequestDTO requestJoin(Long teamId, Long playerId);
+    JoinRequestDTO invitePlayer(Long teamId, Long playerId);
+    List<JoinRequestDTO> getPendingRequestsForTeam(Long teamId);
+    List<JoinRequestDTO> getInvitationsForPlayer(Long userId);
     void acceptRequest(Long requestId);
     void refuseRequest(Long requestId);
 
-    Team transferCaptain(Long teamId, Long newCaptainId);
+    // ── Captain management ────────────────────────────────────────────────────
+    TeamDTO transferCaptain(Long teamId, Long newCaptainId);
     void removePlayer(Long teamId, Long userId);
-    List<User> getAllPlayers();
+
+    // ── Players list ──────────────────────────────────────────────────────────
+    List<PlayerSummaryDTO> getAllPlayers();
 }
