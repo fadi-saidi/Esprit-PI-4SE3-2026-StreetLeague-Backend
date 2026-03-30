@@ -1,6 +1,7 @@
 package tn.esprit.pi.controller;
 
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class CarpoolingController {
 
     // POST /api/carpoolings/create
     @PostMapping("/create")
-    public ResponseEntity<CarpoolingDTO> create(@RequestBody CarpoolingDTO dto) {
+    public ResponseEntity<CarpoolingDTO> create(@Valid @RequestBody CarpoolingDTO dto) {
         return ResponseEntity.ok(carpoolingService.createCarpooling(dto, getConnectedEmail()));
     }
 

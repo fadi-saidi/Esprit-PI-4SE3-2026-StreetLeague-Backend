@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -48,7 +49,14 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/teams/**").authenticated()
+                        .requestMatchers("/reservations/venues").authenticated()
+                        .requestMatchers("/reservations/venue/**").authenticated()
+                        .requestMatchers("/reservations/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/reservations/owner/**").hasRole("VENUE_OWNER")
+                        .requestMatchers("/reservations/**").authenticated()
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/sponsors/**").permitAll()
                         .requestMatchers("/sponsorships/pending", "/sponsorships/active").permitAll()

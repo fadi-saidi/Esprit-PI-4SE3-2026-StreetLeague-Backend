@@ -25,6 +25,7 @@ public class Venue {
     private String photoUrl;
 
     private Boolean available = true;
+    private Boolean verified = false;
     
     @ManyToOne
     @JoinColumn(name = "venue_owner_id")

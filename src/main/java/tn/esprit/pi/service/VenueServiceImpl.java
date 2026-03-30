@@ -24,6 +24,10 @@ public class VenueServiceImpl implements IVenueService {
     // ─── Mapper ───────────────────────────────────────────────────────────────
 
     private VenueDTO toDTO(Venue venue) {
+        String ownerName = null;
+        if (venue.getVenueOwnerProfile() != null && venue.getVenueOwnerProfile().getUser() != null) {
+            ownerName = venue.getVenueOwnerProfile().getUser().getUsername();
+        }
         return VenueDTO.builder()
                 .id(venue.getId())
                 .name(venue.getName())
@@ -33,6 +37,8 @@ public class VenueServiceImpl implements IVenueService {
                 .sportType(venue.getSportType())
                 .photoUrl(venue.getPhotoUrl())
                 .available(venue.getAvailable() != null ? venue.getAvailable() : true)
+                .verified(venue.getVerified() != null ? venue.getVerified() : false)
+                .ownerName(ownerName)
                 .build();
     }
 

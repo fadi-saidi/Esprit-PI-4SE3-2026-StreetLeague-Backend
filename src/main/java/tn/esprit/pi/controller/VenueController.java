@@ -1,6 +1,7 @@
 package tn.esprit.pi.controller;
 
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,7 +38,7 @@ public class VenueController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<VenueDTO> create(@RequestBody VenueDTO dto) {
+    public ResponseEntity<VenueDTO> create(@Valid @RequestBody VenueDTO dto) {
         return ResponseEntity.ok(venueService.createVenue(dto, getConnectedEmail()));
     }
 
@@ -52,7 +53,7 @@ public class VenueController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<VenueDTO> update(@PathVariable Long id, @RequestBody VenueDTO dto) {
+    public ResponseEntity<VenueDTO> update(@PathVariable Long id, @Valid @RequestBody VenueDTO dto) {
         return ResponseEntity.ok(venueService.updateVenue(id, dto, getConnectedEmail()));
     }
 

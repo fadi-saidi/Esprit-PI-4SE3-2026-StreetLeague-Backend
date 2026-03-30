@@ -15,4 +15,7 @@ public interface VenueRepository extends JpaRepository<Venue, Long> {
 
     // Vérifier si la venue appartient bien au VenueOwner (sécurité)
     Optional<Venue> findByIdAndVenueOwnerProfile_Id(Long venueId, Long venueOwnerId);
+
+    // Venues vérifiées et disponibles pour le frontoffice
+    List<Venue> findByVerifiedTrueAndAvailableTrue();
 }

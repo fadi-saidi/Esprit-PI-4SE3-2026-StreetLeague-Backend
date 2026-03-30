@@ -1,5 +1,6 @@
 package tn.esprit.pi.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -29,61 +30,79 @@ public class User {
     private Integer rank;
     private LocalDateTime createdAt;
     
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Wallet wallet;
     
+    @JsonIgnore
     @ManyToMany
     @JoinTable(name = "user_badge",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "badge_id"))
     private Set<Badge> badges;
-    
+
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<Post> posts;
-    
+
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<Comment> comments;
-    
+
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<Like> likes;
-    
+
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<Cart> carts;
-    
+
+    @JsonIgnore
     @OneToMany(mappedBy = "driver")
     private Set<Car> cars;
-    
+
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<VirtualTeam> virtualTeams;
-    
+
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<OwnedPlayer> ownedPlayers;
-    
+
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<Reward> rewards;
-    
+
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<Reservation> reservations;
     
     // Profile relationships
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private CoachProfile coachProfile;
-    
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private PlayerProfile playerProfile;
-    
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private RefereeProfile refereeProfile;
-    
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private HealthProfessionalProfile healthProfessionalProfile;
-    
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private SponsorProfile sponsorProfile;
-    
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private VenueOwnerProfile venueOwnerProfile;
-    
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private AdminProfile adminProfile;
 }
