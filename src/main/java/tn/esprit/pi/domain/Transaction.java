@@ -24,10 +24,8 @@ public class Transaction {
     private LocalDateTime date;
 
     @Enumerated(EnumType.STRING)
-    private TransactionType type;
-
+    private TransactionType transactionType;
     private String description;
-
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

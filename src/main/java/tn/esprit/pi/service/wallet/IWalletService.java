@@ -3,6 +3,7 @@ package tn.esprit.pi.service.wallet;
 import tn.esprit.pi.domain.Transaction;
 import tn.esprit.pi.domain.User;
 import tn.esprit.pi.domain.Wallet;
+import tn.esprit.pi.dto.Dtos;
 import tn.esprit.pi.dto.TransactionResponse;
 
 import java.util.List;
@@ -22,4 +23,5 @@ public interface IWalletService {
     Wallet getWalletById(Long id);
     Wallet updatePoints(Long id, int points);
     void deleteWallet(Long id);
+    List<Dtos.WalletAdminDTO> getAllWalletsAdmin();
 }
