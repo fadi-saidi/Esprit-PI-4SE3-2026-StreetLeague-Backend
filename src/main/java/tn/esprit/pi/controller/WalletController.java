@@ -12,7 +12,9 @@ import tn.esprit.pi.domain.Wallet;
 import tn.esprit.pi.repository.TransactionRepository;
 import tn.esprit.pi.repository.UserRepository;
 import tn.esprit.pi.repository.WalletRepository;
-import tn.esprit.pi.service.WalletService;
+import tn.esprit.pi.service.wallet.IWalletService;
+import tn.esprit.pi.dto.Dtos;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -28,10 +30,16 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WalletController {
 
-    private final WalletService walletService;
+    private final IWalletService walletService;
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+
+    // Constants to avoid code duplication
+    private static final String AMOUNT_KEY = "amount";
+    private static final String MESSAGE_KEY = "message";
+    private static final String TRANSACTION_ID_KEY = "transactionId";
+    private static final String ERROR_KEY = "error";
 
     @GetMapping("/balance")
     public ResponseEntity<Map<String, Object>> getWalletBalance(Authentication auth) {
@@ -50,14 +58,25 @@ public class WalletController {
     }
 
     @GetMapping("/transactions")
-    public ResponseEntity<List<Transaction>> getTransactionHistory(Authentication auth) {
+    public ResponseEntity<List<Map<String, Object>>> getTransactionHistory(Authentication auth) {
         User user = userRepository.findByEmail(auth.getName()).orElse(null);
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
 
         List<Transaction> transactions = transactionRepository.findByUser(user);
-        return ResponseEntity.ok(transactions);
+        List<Map<String, Object>> response = transactions.stream().map(t -> {
+            Map<String, Object> transactionMap = new HashMap<>();
+            transactionMap.put("id", t.getId());
+            transactionMap.put("amount", t.getAmount());
+            transactionMap.put("earnedPoints", t.getEarnedPoints());
+            transactionMap.put("date", t.getDate());
+            transactionMap.put("type", t.getType() != null ? t.getType().name() : "UNKNOWN");
+            transactionMap.put("description", t.getDescription());
+            return transactionMap;
+        }).toList();
+        
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/stats")
@@ -80,7 +99,7 @@ public class WalletController {
                 .filter(t -> t.getAmount() > 0)
                 .mapToDouble(Transaction::getAmount)
                 .sum());
-        stats.put("currentBalance", walletService.getWalletPoints(user));
+        stats.put("currentBalance", walletService.getOrCreateWallet(user).getPoints());
         
         return ResponseEntity.ok(stats);
     }
@@ -99,6 +118,15 @@ public class WalletController {
             @NotNull(message = "Recipient user ID is required")
             Long recipientId,
             
+            @NotNull(message = "Amount is required")
+            @Positive(message = "Amount must be positive")
+            Double amount,
+            
+            String description
+    ) {}
+
+    // DTO for withdraw request
+    public record WithdrawRequest(
             @NotNull(message = "Amount is required")
             @Positive(message = "Amount must be positive")
             Double amount,
@@ -142,11 +170,11 @@ public class WalletController {
 
         // Return response
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "Deposit successful");
-        response.put("amount", request.amount());
+        response.put(MESSAGE_KEY, "Deposit successful");
+        response.put(AMOUNT_KEY, request.amount());
         response.put("pointsAdded", pointsToAdd);
         response.put("newBalance", wallet.getPoints());
-        response.put("transactionId", transaction.getId());
+        response.put(TRANSACTION_ID_KEY, transaction.getId());
         
         return ResponseEntity.ok(response);
     }
@@ -163,13 +191,13 @@ public class WalletController {
         User recipient = userRepository.findById(request.recipientId()).orElse(null);
         if (recipient == null) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Recipient user not found"));
+                    .body(Map.of(ERROR_KEY, "Recipient user not found"));
         }
 
         // Check if trying to transfer to self
         if (sender.getId().equals(recipient.getId())) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Cannot transfer to yourself"));
+                    .body(Map.of(ERROR_KEY, "Cannot transfer to yourself"));
         }
 
         // Get sender's wallet
@@ -188,7 +216,7 @@ public class WalletController {
         // Check if sender has sufficient balance
         if (senderWallet.getPoints() < pointsToTransfer) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Insufficient balance. Available: " + senderWallet.getPoints() + " points, Required: " + pointsToTransfer + " points"));
+                    .body(Map.of(ERROR_KEY, "Insufficient balance. Available: " + senderWallet.getPoints() + " points, Required: " + pointsToTransfer + " points"));
         }
 
         // Get or create recipient's wallet
@@ -236,13 +264,97 @@ public class WalletController {
 
         // Return response
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "Transfer successful");
-        response.put("amount", request.amount());
+        response.put(MESSAGE_KEY, "Transfer successful");
+        response.put(AMOUNT_KEY, request.amount());
         response.put("pointsTransferred", pointsToTransfer);
         response.put("recipientUsername", recipient.getUsername());
         response.put("senderNewBalance", senderWallet.getPoints());
-        response.put("transactionId", senderTransaction.getId());
+        response.put(TRANSACTION_ID_KEY, senderTransaction.getId());
         
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/withdraw")
+    public ResponseEntity<Map<String, Object>> withdraw(@Valid @RequestBody WithdrawRequest request, 
+                                                        Authentication auth) {
+        User user = userRepository.findByEmail(auth.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // Get user's wallet
+        Wallet wallet = walletRepository.findByUser(user)
+                .orElseGet(() -> {
+                    Wallet newWallet = Wallet.builder()
+                            .user(user)
+                            .points(0)
+                            .build();
+                    return walletRepository.save(newWallet);
+                });
+
+        // Convert amount to points (1:1 ratio)
+        int pointsToWithdraw = (int) Math.round(request.amount());
+
+        // Check if user has sufficient balance
+        if (wallet.getPoints() < pointsToWithdraw) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of(ERROR_KEY, "Insufficient balance. Available: " + wallet.getPoints() + " points, Required: " + pointsToWithdraw + " points"));
+        }
+
+        // Deduct points from wallet
+        wallet.setPoints(wallet.getPoints() - pointsToWithdraw);
+        walletRepository.save(wallet);
+
+        // Create transaction record
+        Transaction transaction = Transaction.builder()
+                .user(user)
+                .amount(-request.amount()) // Negative for withdrawal
+                .earnedPoints(-pointsToWithdraw) // Negative points
+                .type(TransactionType.WITHDRAWAL)
+                .description(request.description() != null ? request.description() : "Manual withdrawal")
+                .date(LocalDateTime.now())
+                .build();
+        transactionRepository.save(transaction);
+
+        // Return response
+        Map<String, Object> response = new HashMap<>();
+        response.put(MESSAGE_KEY, "Withdrawal successful");
+        response.put(AMOUNT_KEY, request.amount());
+        response.put("pointsWithdrawn", pointsToWithdraw);
+        response.put("newBalance", wallet.getPoints());
+        response.put(TRANSACTION_ID_KEY, transaction.getId());
+        
+        return ResponseEntity.ok(response);
+    }
+
+    // =========================================================
+    //  ADMIN endpoints  →  /wallet/admin/**
+    // =========================================================
+
+    @GetMapping("/admin/all")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    public ResponseEntity<List<Dtos.WalletAdminDTO>> getAllWallets() {
+        return ResponseEntity.ok(walletService.getAllWalletsAdmin());
+    }
+
+    @GetMapping("/admin/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Wallet> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(walletService.getWalletById(id));
+    }
+
+    @PutMapping("/admin/{id}/points")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Wallet> updatePoints(
+            @PathVariable Long id,
+            @RequestParam int points) {
+        return ResponseEntity.ok(walletService.updatePoints(id, points));
+    }
+
+    @DeleteMapping("/admin/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    public ResponseEntity<String> deleteWallet(@PathVariable Long id) {
+        walletService.deleteWallet(id);
+        return ResponseEntity.ok("Wallet deleted successfully");
     }
 }
