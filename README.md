@@ -13,6 +13,7 @@ A unified digital platform for amateur sports management with JWT authentication
 - **Carpooling**: Coordinate transportation to events
 - **Fantasy Sports**: Virtual teams and rewards
 - **Shop & E-commerce**: Complete shopping experience with cart, checkout, orders, and reviews
+- **Player Merchandise**: Players can submit merchandise for admin approval before selling
 - **Sponsorship Management**: Submit, approve, and manage sponsorships with payment proof
 
 ## Tech Stack
@@ -40,6 +41,15 @@ A unified digital platform for amateur sports management with JWT authentication
 - `GET /sponsorships/admin/stats` - Admin statistics (Admin)
 - `PUT /sponsorships/admin/{id}/approve` - Approve sponsorship (Admin)
 - `PUT /sponsorships/admin/{id}/reject` - Reject sponsorship (Admin)
+
+### Player Merchandise
+- `POST /player-merch/submit` - Submit merchandise for approval (Player)
+- `GET /player-merch/my-submissions` - View my submissions (Player)
+- `PUT /player-merch/{id}` - Update pending merchandise (Player)
+- `GET /player-merch/admin/pending` - View pending submissions (Admin)
+- `PUT /player-merch/admin/{id}/approve` - Approve merchandise (Admin)
+- `PUT /player-merch/admin/{id}/reject` - Reject merchandise (Admin)
+- `GET /player-merch/admin/stats` - Admin statistics (Admin)
 
 ### Shop & Products
 - `GET /products` - List all products (Public)

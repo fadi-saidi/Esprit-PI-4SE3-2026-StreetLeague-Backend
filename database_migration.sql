@@ -45,6 +45,30 @@ CREATE TABLE IF NOT EXISTS orders (
     INDEX idx_order_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Create cart table
+CREATE TABLE IF NOT EXISTS cart (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    created_at DATETIME NOT NULL,
+    total_amount DOUBLE NOT NULL DEFAULT 0.0,
+    user_id BIGINT NOT NULL,
+    CONSTRAINT fk_cart_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_cart_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create cart_item table
+CREATE TABLE IF NOT EXISTS cart_item (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    quantity INT NOT NULL,
+    subtotal DOUBLE NOT NULL,
+    cart_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    CONSTRAINT fk_cart_item_cart FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cart_item_product FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE RESTRICT,
+    INDEX idx_cart_item_cart (cart_id),
+    INDEX idx_cart_item_product (product_id),
+    UNIQUE KEY unique_cart_product (cart_id, product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Create order_item table
 CREATE TABLE IF NOT EXISTS order_item (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -74,6 +98,31 @@ CREATE TABLE IF NOT EXISTS product_review (
     INDEX idx_review_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Create player_merch table for player merchandise submissions
+CREATE TABLE IF NOT EXISTS player_merch (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    price DOUBLE NOT NULL,
+    stock INT NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    image VARCHAR(500),
+    sport_type VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    seller_id BIGINT NOT NULL,
+    approved_by BIGINT,
+    submitted_at DATETIME NOT NULL,
+    approved_at DATETIME,
+    rejection_reason TEXT,
+    product_id BIGINT,
+    CONSTRAINT fk_player_merch_seller FOREIGN KEY (seller_id) REFERENCES player_profile(id) ON DELETE CASCADE,
+    CONSTRAINT fk_player_merch_approver FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_player_merch_product FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE SET NULL,
+    INDEX idx_player_merch_seller (seller_id),
+    INDEX idx_player_merch_status (status),
+    INDEX idx_player_merch_submitted (submitted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ============================================
 -- Sample Data (Optional - for testing)
 -- ============================================
@@ -98,6 +147,12 @@ CREATE TABLE IF NOT EXISTS product_review (
 -- Check orders table structure
 -- DESCRIBE orders;
 
+-- Check cart table structure
+-- DESCRIBE cart;
+
+-- Check cart_item table structure
+-- DESCRIBE cart_item;
+
 -- Check order_item table structure
 -- DESCRIBE order_item;
 
@@ -107,6 +162,8 @@ CREATE TABLE IF NOT EXISTS product_review (
 -- Count records in new tables
 -- SELECT 
 --     (SELECT COUNT(*) FROM orders) as total_orders,
+--     (SELECT COUNT(*) FROM cart) as total_carts,
+--     (SELECT COUNT(*) FROM cart_item) as total_cart_items,
 --     (SELECT COUNT(*) FROM order_item) as total_order_items,
 --     (SELECT COUNT(*) FROM product_review) as total_reviews;
 
@@ -117,6 +174,8 @@ CREATE TABLE IF NOT EXISTS product_review (
 -- To rollback these changes, uncomment and run:
 -- ALTER TABLE sponsorship DROP COLUMN payment_proof;
 -- DROP TABLE IF EXISTS product_review;
+-- DROP TABLE IF EXISTS cart_item;
+-- DROP TABLE IF EXISTS cart;
 -- DROP TABLE IF EXISTS order_item;
 -- DROP TABLE IF EXISTS orders;
 

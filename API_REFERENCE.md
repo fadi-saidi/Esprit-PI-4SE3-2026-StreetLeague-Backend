@@ -119,6 +119,71 @@ GET /products/price-range?minPrice=10&maxPrice=100
 GET /products/{id}/reviews
 ```
 
+### Player Merchandise Endpoints
+
+#### Player Endpoints (Requires PLAYER role)
+
+```http
+# Submit merchandise for approval
+POST /player-merch/submit
+Authorization: Bearer {jwt_token}
+Content-Type: application/json
+
+{
+  "name": "Custom Team Jersey",
+  "description": "High-quality jersey with team logo",
+  "price": 45.99,
+  "stock": 20,
+  "category": "apparel",
+  "image": "https://example.com/jersey.jpg",
+  "sportType": "FOOTBALL"
+}
+
+# Get my merchandise submissions
+GET /player-merch/my-submissions
+Authorization: Bearer {jwt_token}
+
+# Update pending merchandise
+PUT /player-merch/{id}
+Authorization: Bearer {jwt_token}
+Content-Type: application/json
+
+{
+  "name": "Updated Jersey",
+  "description": "Updated description",
+  "price": 49.99,
+  "stock": 25,
+  "category": "apparel",
+  "image": "https://example.com/jersey-updated.jpg",
+  "sportType": "FOOTBALL"
+}
+```
+
+#### Admin Endpoints (Requires ADMIN role)
+
+```http
+# Get pending merchandise submissions
+GET /player-merch/admin/pending?page=0&pageSize=20
+Authorization: Bearer {jwt_token}
+
+# Get merchandise statistics
+GET /player-merch/admin/stats
+Authorization: Bearer {jwt_token}
+
+# Approve merchandise (creates product)
+PUT /player-merch/admin/{id}/approve
+Authorization: Bearer {jwt_token}
+
+# Reject merchandise
+PUT /player-merch/admin/{id}/reject
+Authorization: Bearer {jwt_token}
+Content-Type: application/json
+
+{
+  "reason": "Image quality is too low. Please provide higher resolution images."
+}
+```
+
 ### Cart Endpoints (Requires Authentication)
 
 ```http
@@ -273,6 +338,11 @@ Response:
 - `DELIVERED` - Successfully delivered
 - `CANCELLED` - Order cancelled
 
+### MerchStatus
+- `PENDING` - Awaiting admin approval
+- `APPROVED` - Approved and converted to product
+- `REJECTED` - Rejected by admin
+
 ### SportType
 - `FOOTBALL`
 - `BASKETBALL`
@@ -314,7 +384,17 @@ Response:
 8. View orders: `GET /orders/my-orders`
 9. Review product: `POST /products/1/reviews`
 
-### Scenario 3: Admin Management
+### Scenario 3: Player Merchandise Flow
+1. Register as PLAYER
+2. Login and get JWT token
+3. Submit merchandise: `POST /player-merch/submit`
+4. Check submission status: `GET /player-merch/my-submissions`
+5. Admin reviews: `GET /player-merch/admin/pending`
+6. Admin approves: `PUT /player-merch/admin/{id}/approve`
+7. Merchandise becomes available as product in shop
+8. Players can update pending submissions: `PUT /player-merch/{id}`
+
+### Scenario 4: Admin Management
 1. Login as ADMIN
 2. View sponsorship stats: `GET /sponsorships/admin/stats`
 3. Check low stock: `GET /products/low-stock`
