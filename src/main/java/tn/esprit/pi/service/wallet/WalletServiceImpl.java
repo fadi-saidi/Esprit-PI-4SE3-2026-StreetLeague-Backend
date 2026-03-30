@@ -56,7 +56,7 @@ public class WalletServiceImpl implements IWalletService {
                 .amount(amount)
                 .earnedPoints(earned)
                 .date(LocalDateTime.now())
-                .transactionType(TransactionType.DEPOSIT)
+                .type(TransactionType.DEPOSIT)
                 .user(user)
                 .build());
 
@@ -81,7 +81,7 @@ public class WalletServiceImpl implements IWalletService {
                 .amount(-amount)
                 .earnedPoints(-pointsNeeded)
                 .date(LocalDateTime.now())
-                .transactionType(TransactionType.WITHDRAWAL)
+                .type(TransactionType.WITHDRAWAL)
                 .user(user)
                 .build());
 
@@ -115,7 +115,7 @@ public class WalletServiceImpl implements IWalletService {
                 .amount(-amount)
                 .earnedPoints(-points)
                 .date(now)
-                .transactionType(TransactionType.TRANSFER)
+                .type(TransactionType.TRANSFER)
                 .user(from)
                 .build());
 
@@ -123,7 +123,7 @@ public class WalletServiceImpl implements IWalletService {
                 .amount(amount)
                 .earnedPoints(points)
                 .date(now)
-                .transactionType(TransactionType.TRANSFER)
+                .type(TransactionType.TRANSFER)
                 .user(to)
                 .build());
     }
@@ -132,8 +132,8 @@ public class WalletServiceImpl implements IWalletService {
     public List<TransactionResponse> getHistory(User user) {
         return transactionRepository.findByUser(user).stream().map(t -> {
             String type;
-            if (t.getTransactionType() != null) {
-                type = t.getTransactionType().name();
+            if (t.getType() != null) {
+                type = t.getType().name();
             } else {
                 // fallback pour les anciens enregistrements sans type
                 if (t.getAmount() > 0) type = "DEPOSIT";
