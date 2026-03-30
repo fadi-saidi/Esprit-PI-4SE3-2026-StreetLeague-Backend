@@ -2,6 +2,7 @@ package tn.esprit.pi.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -9,19 +10,20 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Transaction {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Enumerated(EnumType.STRING)
-    private TransactionType type;
-    
-    private Double amount;
+
+    private double amount;
+
+    private int earnedPoints;
+
     private LocalDateTime date;
-    private String status;
-    
+
     @ManyToOne
-    @JoinColumn(name = "wallet_id")
-    private Wallet wallet;
+    @JoinColumn(name = "user_id")
+    private User user;
 }

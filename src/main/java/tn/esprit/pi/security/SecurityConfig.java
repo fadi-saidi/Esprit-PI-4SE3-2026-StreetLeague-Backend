@@ -56,6 +56,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/medical/**").hasAnyRole("PLAYER", "HEALTH_PROFESSIONAL", "COACH", "ADMIN")
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
@@ -84,6 +85,7 @@ public class SecurityConfig {
                         .requestMatchers("/referee/**").hasRole("REFEREE")
                         .requestMatchers("/health/**").hasRole("HEALTH_PROFESSIONAL")
                         .requestMatchers("/venue/**").hasRole("VENUE_OWNER")
+                        .requestMatchers("/wallet/**").authenticated()
                         .requestMatchers("/shops/**").permitAll()
                         .requestMatchers("/sponsorships/**").authenticated()
                         .anyRequest().authenticated()
