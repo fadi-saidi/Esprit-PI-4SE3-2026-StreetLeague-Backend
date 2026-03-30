@@ -13,6 +13,7 @@ public class CarDTO {
     private Integer seats;
     private Integer availableSeats;
     private String plateNumber;
+    private String photoUrl;
     private String driverUsername;
     private String driverEmail;
 }

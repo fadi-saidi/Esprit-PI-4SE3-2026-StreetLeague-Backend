@@ -15,4 +15,6 @@ public class VenueDTO {
     private Double pricePerHour;
     private Integer capacity;
     private SportType sportType;
+    private String photoUrl;
+    private Boolean available;
 }

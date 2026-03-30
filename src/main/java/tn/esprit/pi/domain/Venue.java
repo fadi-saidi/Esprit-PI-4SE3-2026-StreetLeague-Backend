@@ -21,6 +21,10 @@ public class Venue {
     
     @Enumerated(EnumType.STRING)
     private SportType sportType;
+
+    private String photoUrl;
+
+    private Boolean available = true;
     
     @ManyToOne
     @JoinColumn(name = "venue_owner_id")

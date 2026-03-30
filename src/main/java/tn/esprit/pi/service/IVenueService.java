@@ -10,9 +10,15 @@ public interface IVenueService {
 
     List<VenueDTO> getMyVenues(String email);
 
+    List<VenueDTO> getAllVenues();
+
     VenueDTO getVenueById(Long venueId, String email);
 
     VenueDTO updateVenue(Long venueId, VenueDTO dto, String email);
 
     void deleteVenue(Long venueId, String email);
+
+    VenueDTO updatePhotoUrl(Long venueId, String photoUrl, String email);
+
+    VenueDTO toggleAvailability(Long venueId, String email);
 }

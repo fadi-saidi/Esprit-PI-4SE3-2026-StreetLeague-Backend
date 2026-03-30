@@ -1,7 +1,9 @@
 package tn.esprit.pi.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.pi.domain.Car;
 import tn.esprit.pi.domain.Carpooling;
 import tn.esprit.pi.domain.User;
@@ -10,6 +12,7 @@ import tn.esprit.pi.repository.CarRepository;
 import tn.esprit.pi.repository.CarpoolingRepository;
 import tn.esprit.pi.repository.UserRepository;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +54,7 @@ public class CarpoolingServiceImpl implements ICarpoolingService {
                 .carId(c.getCar().getId())
                 .carModel(c.getCar().getModel())
                 .plateNumber(c.getCar().getPlateNumber())
+                .carPhotoUrl(c.getCar().getPhotoUrl())
                 .availableSeats(c.getCar().getAvailableSeats())
                 .driverUsername(c.getCar().getDriver().getUsername())
                 .driverEmail(c.getCar().getDriver().getEmail())
@@ -185,7 +189,22 @@ public class CarpoolingServiceImpl implements ICarpoolingService {
 
         // Clear references in the join table to avoid foreign key constraint violation
         carpooling.getParticipants().clear();
-        
+
         carpoolingRepository.delete(carpooling);
+    }
+
+    // ─── Scheduled cleanup of expired trips ───────────────────────────────────
+
+    @Scheduled(cron = "0 0 0 * * *") // Runs every day at midnight
+    @Transactional
+    public void deleteExpiredCarpoolings() {
+        List<Carpooling> expired = carpoolingRepository.findByDateBefore(LocalDate.now());
+        for (Carpooling c : expired) {
+            Car car = c.getCar();
+            car.setAvailableSeats(car.getAvailableSeats() + c.getParticipants().size());
+            carRepository.save(car);
+            c.getParticipants().clear();
+            carpoolingRepository.delete(c);
+        }
     }
 }

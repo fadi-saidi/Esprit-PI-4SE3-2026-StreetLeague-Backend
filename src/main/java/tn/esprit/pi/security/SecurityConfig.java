@@ -56,8 +56,10 @@ public class SecurityConfig {
                         .requestMatchers("/sponsorships/admin/**").hasRole("ADMIN")
                         .requestMatchers("/sponsors/admin/**").hasRole("ADMIN")
                         .requestMatchers("/cart/**").authenticated()
+                        .requestMatchers("/uploads/**").permitAll()                // Static uploaded files
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")         // Admin backoffice
+                        .requestMatchers("/venue/all").authenticated()             // Player can list venues
                         .requestMatchers("/venue/**").hasRole("VENUE_OWNER")       // VenueController
                         .requestMatchers("/cars/**").authenticated()               // CarController
                         .requestMatchers("/carpoolings/**").authenticated()        // CarpoolingController

@@ -20,4 +20,7 @@ public interface ICarService {
 
     // Supprimer ma voiture
     void deleteCar(Long carId, String email);
+
+    // Mettre à jour la photo de la voiture
+    CarDTO updatePhotoUrl(Long carId, String photoUrl, String email);
 }

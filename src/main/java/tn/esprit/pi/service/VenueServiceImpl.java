@@ -31,6 +31,8 @@ public class VenueServiceImpl implements IVenueService {
                 .pricePerHour(venue.getPricePerHour())
                 .capacity(venue.getCapacity())
                 .sportType(venue.getSportType())
+                .photoUrl(venue.getPhotoUrl())
+                .available(venue.getAvailable() != null ? venue.getAvailable() : true)
                 .build();
     }
 
@@ -39,7 +41,7 @@ public class VenueServiceImpl implements IVenueService {
     private Long getOwnerIdByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found: " + email));
-        return user.getId(); // Meme ID que VenueOwnerProfile grace a @MapsId
+        return user.getId();
     }
 
     private VenueOwnerProfile getOwnerProfile(String email) {
@@ -75,6 +77,14 @@ public class VenueServiceImpl implements IVenueService {
     }
 
     @Override
+    public List<VenueDTO> getAllVenues() {
+        return venueRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public VenueDTO getVenueById(Long venueId, String email) {
         Long ownerId = getOwnerIdByEmail(email);
         Venue venue = venueRepository.findByIdAndVenueOwnerProfile_Id(venueId, ownerId)
@@ -103,5 +113,23 @@ public class VenueServiceImpl implements IVenueService {
         Venue venue = venueRepository.findByIdAndVenueOwnerProfile_Id(venueId, ownerId)
                 .orElseThrow(() -> new RuntimeException("Venue not found or access denied"));
         venueRepository.delete(venue);
+    }
+
+    @Override
+    public VenueDTO updatePhotoUrl(Long venueId, String photoUrl, String email) {
+        Long ownerId = getOwnerIdByEmail(email);
+        Venue venue = venueRepository.findByIdAndVenueOwnerProfile_Id(venueId, ownerId)
+                .orElseThrow(() -> new RuntimeException("Venue not found or access denied"));
+        venue.setPhotoUrl(photoUrl);
+        return toDTO(venueRepository.save(venue));
+    }
+
+    @Override
+    public VenueDTO toggleAvailability(Long venueId, String email) {
+        Long ownerId = getOwnerIdByEmail(email);
+        Venue venue = venueRepository.findByIdAndVenueOwnerProfile_Id(venueId, ownerId)
+                .orElseThrow(() -> new RuntimeException("Venue not found or access denied"));
+        venue.setAvailable(venue.getAvailable() == null || !venue.getAvailable());
+        return toDTO(venueRepository.save(venue));
     }
 }

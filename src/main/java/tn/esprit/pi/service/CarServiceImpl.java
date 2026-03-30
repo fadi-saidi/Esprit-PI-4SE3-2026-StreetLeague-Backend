@@ -32,6 +32,7 @@ public class CarServiceImpl implements ICarService {
                 .seats(car.getSeats())
                 .availableSeats(car.getAvailableSeats())
                 .plateNumber(car.getPlateNumber())
+                .photoUrl(car.getPhotoUrl())
                 .driverUsername(car.getDriver().getUsername())
                 .driverEmail(car.getDriver().getEmail())
                 .build();
@@ -83,5 +84,14 @@ public class CarServiceImpl implements ICarService {
         Car car = carRepository.findByIdAndDriverId(carId, driver.getId())
                 .orElseThrow(() -> new RuntimeException("Car not found or access denied"));
         carRepository.delete(car);
+    }
+
+    @Override
+    public CarDTO updatePhotoUrl(Long carId, String photoUrl, String email) {
+        User driver = getUserByEmail(email);
+        Car car = carRepository.findByIdAndDriverId(carId, driver.getId())
+                .orElseThrow(() -> new RuntimeException("Car not found or access denied"));
+        car.setPhotoUrl(photoUrl);
+        return toDTO(carRepository.save(car));
     }
 }

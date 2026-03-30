@@ -19,6 +19,7 @@ public class CarpoolingDTO {
     private Long carId;
     private String carModel;
     private String plateNumber;
+    private String carPhotoUrl;
     private Integer availableSeats;
     private String driverUsername;
     private String driverEmail;
