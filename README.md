@@ -51,6 +51,11 @@ A unified digital platform for amateur sports management with JWT authentication
 - `PUT /player-merch/admin/{id}/reject` - Reject merchandise (Admin)
 - `GET /player-merch/admin/stats` - Admin statistics (Admin)
 
+### Wallet Integration
+- `GET /wallet/balance` - Get wallet balance and points (Authenticated)
+- `GET /wallet/transactions` - Get transaction history (Authenticated)
+- `GET /wallet/stats` - Get wallet statistics (Authenticated)
+
 ### Shop & Products
 - `GET /products` - List all products (Public)
 - `GET /products/{id}` - Product details (Public)

@@ -184,6 +184,22 @@ Content-Type: application/json
 }
 ```
 
+### Wallet Endpoints (Requires Authentication)
+
+```http
+# Get wallet balance
+GET /wallet/balance
+Authorization: Bearer {jwt_token}
+
+# Get transaction history
+GET /wallet/transactions
+Authorization: Bearer {jwt_token}
+
+# Get wallet statistics
+GET /wallet/stats
+Authorization: Bearer {jwt_token}
+```
+
 ### Cart Endpoints (Requires Authentication)
 
 ```http

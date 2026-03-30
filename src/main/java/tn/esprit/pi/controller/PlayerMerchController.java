@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import tn.esprit.pi.domain.*;
 import tn.esprit.pi.dto.ShopDTOs.*;
 import tn.esprit.pi.repository.*;
+import tn.esprit.pi.service.WalletService;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -31,6 +32,7 @@ public class PlayerMerchController {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final ShopRepository shopRepository;
+    private final WalletService walletService;
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
 

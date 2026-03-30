@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import tn.esprit.pi.domain.*;
 import tn.esprit.pi.dto.ShopDTOs.*;
 import tn.esprit.pi.repository.*;
+import tn.esprit.pi.service.WalletService;
+import tn.esprit.pi.service.PlayerMerchService;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -25,6 +27,8 @@ public class OrderController {
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final WalletService walletService;
+    private final PlayerMerchService playerMerchService;
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -98,6 +102,9 @@ public class OrderController {
         cart.setTotalAmount(0.0);
         cartRepository.save(cart);
 
+        // Process wallet payment - deduct amount and add points
+        walletService.processOrderPayment(user, saved.getTotalAmount(), saved.getId());
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new CheckoutResponse("Order placed successfully", saved.getId()));
     }
@@ -144,21 +151,32 @@ public class OrderController {
         order.setStatus(status);
         orderRepository.save(order);
 
-        if (status == OrderStatus.CONFIRMED && previous != OrderStatus.CONFIRMED)
+        if (status == OrderStatus.CONFIRMED && previous != OrderStatus.CONFIRMED) {
             order.getOrderItems().forEach(i -> {
                 if (i.getProduct() != null) {
+                    // Update product stock
                     i.getProduct().setStock(Math.max(0, i.getProduct().getStock() - i.getQuantity()));
                     productRepository.save(i.getProduct());
+                    
+                    // Process player merchandise sale if applicable
+                    if (playerMerchService.isPlayerMerchandise(i.getProduct())) {
+                        double itemTotal = i.getPrice() * i.getQuantity();
+                        playerMerchService.processPlayerMerchSale(i.getProduct(), i.getQuantity(), itemTotal);
+                    }
                 }
             });
+        }
 
-        if (status == OrderStatus.CANCELLED && previous == OrderStatus.CONFIRMED)
+        if (status == OrderStatus.CANCELLED && previous == OrderStatus.CONFIRMED) {
             order.getOrderItems().forEach(i -> {
                 if (i.getProduct() != null) {
                     i.getProduct().setStock(i.getProduct().getStock() + i.getQuantity());
                     productRepository.save(i.getProduct());
                 }
             });
+            // Process refund to wallet
+            walletService.processOrderRefund(order.getUser(), order.getTotalAmount(), order.getId());
+        }
 
         return ResponseEntity.ok(toOrderResponse(order));
     }

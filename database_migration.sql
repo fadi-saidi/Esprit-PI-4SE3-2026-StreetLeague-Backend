@@ -123,6 +123,13 @@ CREATE TABLE IF NOT EXISTS player_merch (
     INDEX idx_player_merch_submitted (submitted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Update transaction table to include type and description for wallet integration
+ALTER TABLE transaction
+ADD COLUMN IF NOT EXISTS type VARCHAR(20) AFTER earned_points;
+
+ALTER TABLE transaction
+ADD COLUMN IF NOT EXISTS description VARCHAR(255) AFTER type;
+
 -- ============================================
 -- Sample Data (Optional - for testing)
 -- ============================================
