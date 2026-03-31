@@ -124,10 +124,20 @@ public class PredictionServiceImpl implements IPredictionService {
 
     // ── Manually resolve by ID (admin endpoint) ───────────────────────────────
     @Override
-    public void resolvePredictionById(Long predictionId) {
+    public PredictionResponse resolvePredictionById(Long predictionId) {
         Prediction prediction = predictionRepository.findById(predictionId)
                 .orElseThrow(() -> new RuntimeException("Prediction not found"));
         resolveOnePrediction(prediction);
+        return toResponse(predictionRepository.findById(predictionId)
+                .orElseThrow(() -> new RuntimeException("Prediction not found after resolve")));
+    }
+
+    // ── Admin: list all pending predictions ───────────────────────────────────
+    @Override
+    public List<PredictionResponse> getAllPendingPredictions() {
+        return predictionRepository
+                .findByStatusOrderByWeekYearDescWeekNumberDesc(tn.esprit.pi.domain.PredictionStatus.PENDING)
+                .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     // ── Core resolution logic ─────────────────────────────────────────────────

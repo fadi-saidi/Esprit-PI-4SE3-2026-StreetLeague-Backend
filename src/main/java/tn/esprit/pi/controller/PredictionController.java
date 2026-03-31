@@ -41,9 +41,15 @@ public class PredictionController {
         predictionService.savePlayerStat(dto);
     }
 
+    // Admin : lister toutes les predictions en attente
+    @GetMapping("/admin/pending")
+    public List<PredictionResponse> getAllPending() {
+        return predictionService.getAllPendingPredictions();
+    }
+
     // Admin : résoudre manuellement une prediction
     @PostMapping("/admin/resolve/{predictionId}")
-    public void resolve(@PathVariable Long predictionId) {
-        predictionService.resolvePredictionById(predictionId);
+    public PredictionResponse resolve(@PathVariable Long predictionId) {
+        return predictionService.resolvePredictionById(predictionId);
     }
 }

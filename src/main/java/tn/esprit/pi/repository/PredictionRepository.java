@@ -21,6 +21,9 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
     List<Prediction> findByVirtualTeamIdOrderByWeekYearDescWeekNumberDesc(Long virtualTeamId);
 
     void deleteByVirtualTeamId(Long virtualTeamId);
+
+    // All predictions by status (admin: list all pending)
+    List<Prediction> findByStatusOrderByWeekYearDescWeekNumberDesc(PredictionStatus status);
 }
 
 

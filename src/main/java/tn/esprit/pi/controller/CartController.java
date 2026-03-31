@@ -70,7 +70,8 @@ public class CartController {
 
     @PostMapping("/add/{productId}")
     public ResponseEntity<?> addToCart(@PathVariable Long productId,
-                                       @Valid @RequestBody AddToCartRequest request,
+                                       @RequestBody(required = false) AddToCartRequest request,
+                                       @RequestParam(defaultValue = "1") Integer quantity,
                                        Authentication auth) {
         try {
             if (auth == null) {

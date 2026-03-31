@@ -19,5 +19,7 @@ public interface IPredictionService {
 
     void resolveLastWeekPredictions();
 
-    void resolvePredictionById(Long predictionId);
+    PredictionResponse resolvePredictionById(Long predictionId);
+
+    List<PredictionResponse> getAllPendingPredictions();
 }
