@@ -66,7 +66,7 @@ public class SecurityConfig {
                         // Medical
                         .requestMatchers("/medical/**").hasAnyRole("PLAYER", "HEALTH_PROFESSIONAL", "COACH", "ADMIN")
                         // Teams
-                        .requestMatchers("/api/teams/**").authenticated()
+                        .requestMatchers("/api/teams/**").permitAll()
                         // Venues
                         .requestMatchers("/reservations/venues").authenticated()
                         .requestMatchers("/reservations/venue/**").authenticated()

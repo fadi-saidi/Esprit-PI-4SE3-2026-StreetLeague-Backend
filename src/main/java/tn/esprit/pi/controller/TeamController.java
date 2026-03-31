@@ -121,7 +121,7 @@ public class TeamController {
         if (body.containsKey("name")) dto.setName(body.get("name").toString());
         if (body.containsKey("logo")) dto.setLogo(body.get("logo").toString());
         String typeStr = body.containsKey("type")      ? body.get("type").toString()
-                       : body.containsKey("sportType") ? body.get("sportType").toString() : null;
+                : body.containsKey("sportType") ? body.get("sportType").toString() : null;
         if (typeStr != null && !typeStr.isBlank()) dto.setType(typeStr);
         return dto;
     }
@@ -133,7 +133,7 @@ public class TeamController {
         if (name.length() > 80)   throw new IllegalArgumentException("Team name cannot exceed 80 characters");
 
         String typeStr = body.containsKey("type")      ? body.get("type").toString()
-                       : body.containsKey("sportType") ? body.get("sportType").toString() : "";
+                : body.containsKey("sportType") ? body.get("sportType").toString() : "";
         if (typeStr == null || typeStr.isBlank()) throw new IllegalArgumentException("Sport type is required");
         try { SportType.valueOf(typeStr); }
         catch (IllegalArgumentException e) { throw new IllegalArgumentException("Invalid sport type: " + typeStr); }
