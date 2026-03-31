@@ -67,12 +67,10 @@ public class User {
 
     @JsonIgnore
     @OneToMany(mappedBy = "user")
-    @JsonIgnore
     private Set<VirtualTeam> virtualTeams;
 
     @JsonIgnore
     @OneToMany(mappedBy = "user")
-    @JsonIgnore
     private Set<OwnedPlayer> ownedPlayers;
 
     @JsonIgnore
