@@ -1,4 +1,4 @@
-package tn.esprit.pi.security.jwt;
+package tn.esprit.pi.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

@@ -1,4 +1,4 @@
-package tn.esprit.pi.security.jwt;
+package tn.esprit.pi.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -11,7 +11,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import tn.esprit.pi.security.CustomUserDetailsService;
 
 import java.io.IOException;
 
