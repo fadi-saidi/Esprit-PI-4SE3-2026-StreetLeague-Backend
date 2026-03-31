@@ -254,10 +254,15 @@ public class TeamServiceImpl implements ITeamService {
         request.setStatus("ACCEPTED");
         joinRequestRepository.save(request);
 
-        Team team = request.getTeam();
+        // Re-fetch the team directly so playerProfiles is a proper Hibernate-managed collection
+        Team team = teamRepository.findById(request.getTeam().getId())
+                .orElseThrow(() -> new RuntimeException("Team not found"));
+
         playerProfileRepository.findByUserId(request.getPlayer().getId()).ifPresent(profile -> {
-            if (team.getPlayerProfiles() == null) team.setPlayerProfiles(new HashSet<>());
-            if (!team.getPlayerProfiles().contains(profile)) {
+            boolean alreadyMember = team.getPlayerProfiles() != null &&
+                    team.getPlayerProfiles().stream().anyMatch(p -> p.getId().equals(profile.getId()));
+            if (!alreadyMember) {
+                if (team.getPlayerProfiles() == null) team.setPlayerProfiles(new HashSet<>());
                 team.getPlayerProfiles().add(profile);
                 teamRepository.save(team);
             }
@@ -302,12 +307,13 @@ public class TeamServiceImpl implements ITeamService {
 
     @Override
     public List<PlayerSummaryDTO> getAllPlayers() {
-        return userRepository.findAll().stream()
-                .filter(u -> u.getRole() == Role.PLAYER)
-                .map(u -> PlayerSummaryDTO.builder()
-                        .id(u.getId())
-                        .fullName(u.getUsername())
-                        .email(u.getEmail())
+        return playerProfileRepository.findAll().stream()
+                .filter(p -> p.getUser() != null)
+                .map(p -> PlayerSummaryDTO.builder()
+                        .id(p.getUser().getId())
+                        .fullName(p.getUser().getUsername())
+                        .email(p.getUser().getEmail())
+                        .level(p.getLevel() != null ? p.getLevel().name() : null)
                         .build())
                 .collect(Collectors.toList());
     }
