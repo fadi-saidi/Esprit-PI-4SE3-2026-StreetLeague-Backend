@@ -35,14 +35,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         System.out.println("Request URI: " + request.getRequestURI());
         System.out.println("Auth Header: " + authHeader);
 
-        // No token → continue without authentication (public endpoints)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             System.out.println("No valid Authorization header found");
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extract raw token (remove "Bearer " prefix)
         String token = authHeader.substring(7);
         System.out.println("Extracted token: " + token.substring(0, Math.min(20, token.length())) + "...");
         String email;
@@ -61,22 +59,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // Build authentication directly from JWT claims — NO database query needed
         if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // The role in the JWT is already "ROLE_VENUE_OWNER" format
             var authorities = List.of(new SimpleGrantedAuthority(role));
-
-            var authToken = new UsernamePasswordAuthenticationToken(
-                    email, null, authorities
-            );
+            var authToken = new UsernamePasswordAuthenticationToken(email, null, authorities);
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authToken);
-
-            System.out.println("Authentication set successfully for: " + email + " with role: " + role);
             log.debug("Authenticated user {} with role {} for {}", email, role, request.getRequestURI());
         } else {
-            System.out.println("Authentication NOT set - email: " + email + ", role: " + role + ", existing auth: " + SecurityContextHolder.getContext().getAuthentication());
+            System.out.println("Authentication NOT set - email: " + email + ", role: " + role
+                    + ", existing auth: " + SecurityContextHolder.getContext().getAuthentication());
         }
 
         filterChain.doFilter(request, response);
     }
 }
-

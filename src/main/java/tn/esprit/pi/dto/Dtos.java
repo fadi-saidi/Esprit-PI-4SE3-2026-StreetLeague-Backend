@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class Dtos {
 
     public record RegisterRequest(
+
             String fullName,
             String email,
             String password,
