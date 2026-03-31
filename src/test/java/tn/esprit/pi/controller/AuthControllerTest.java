@@ -60,7 +60,7 @@ class AuthControllerTest {
 
         loginRequest = new LoginRequest("test@example.com", "password123");
 
-        authResponse = new AuthResponse("jwtToken", "test@example.com", "ROLE_PLAYER", 1L);
+        authResponse = new AuthResponse(1L, "jwtToken", "test@example.com", "ROLE_PLAYER", 1L);
     }
 
     @Test

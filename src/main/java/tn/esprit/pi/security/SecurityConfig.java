@@ -3,7 +3,6 @@ package tn.esprit.pi.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -11,6 +10,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -56,8 +56,16 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/medical/**").hasAnyRole("PLAYER", "HEALTH_PROFESSIONAL", "COACH", "ADMIN")
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/teams/**").authenticated()
+                        .requestMatchers("/reservations/venues").authenticated()
+                        .requestMatchers("/reservations/venue/**").authenticated()
+                        .requestMatchers("/reservations/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/reservations/owner/**").hasRole("VENUE_OWNER")
+                        .requestMatchers("/reservations/**").authenticated()
+                        .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/products/upload-image").hasAnyRole("ADMIN", "VENUE_OWNER")
@@ -81,6 +89,11 @@ public class SecurityConfig {
                         .requestMatchers("/orders/admin/**").hasRole("ADMIN")
                         .requestMatchers("/orders/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")         // Admin backoffice
+                        .requestMatchers("/venue/all").authenticated()             // Player can list venues
+                        .requestMatchers("/venue/**").hasRole("VENUE_OWNER")       // VenueController
+                        .requestMatchers("/cars/**").authenticated()               // CarController
+                        .requestMatchers("/carpoolings/**").authenticated()        // CarpoolingController
                         .requestMatchers("/coach/**").hasRole("COACH")
                         .requestMatchers("/referee/**").hasRole("REFEREE")
                         .requestMatchers("/health/**").hasRole("HEALTH_PROFESSIONAL")

@@ -36,6 +36,7 @@ public class Dtos {
     ) {}
 
     public record AuthResponse(
+            Long id,
             String token,
             String email,
             String role,

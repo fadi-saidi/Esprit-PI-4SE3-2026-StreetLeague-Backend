@@ -18,7 +18,8 @@ public class Car {
     private Integer seats;
     private Integer availableSeats;
     private String plateNumber;
-    
+    private String photoUrl;
+
     @ManyToOne
     @JoinColumn(name = "driver_id")
     private User driver;

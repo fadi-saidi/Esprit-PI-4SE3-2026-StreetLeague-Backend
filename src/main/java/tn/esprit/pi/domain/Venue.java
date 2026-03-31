@@ -21,14 +21,19 @@ public class Venue {
     
     @Enumerated(EnumType.STRING)
     private SportType sportType;
+
+    private String photoUrl;
+
+    private Boolean available = true;
+    private Boolean verified = false;
     
     @ManyToOne
     @JoinColumn(name = "venue_owner_id")
     private VenueOwnerProfile venueOwnerProfile;
     
-    @OneToMany(mappedBy = "venue")
+    @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Reservation> reservations;
     
-    @OneToMany(mappedBy = "venue")
+    @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Sponsorship> sponsorships;
 }

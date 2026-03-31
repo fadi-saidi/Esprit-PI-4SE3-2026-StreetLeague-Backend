@@ -131,6 +131,7 @@ public class IAuthServiceImp implements IAuthService {
         );
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(req.email());
+
         String token = jwtService.generateToken(userDetails);
 
         String role = userDetails.getAuthorities().stream()
@@ -159,6 +160,6 @@ public class IAuthServiceImp implements IAuthService {
             default -> profileId = null;
         }
 
-        return new AuthResponse(token, userDetails.getUsername(), role, profileId);
+        return new AuthResponse(user.getId(), token, userDetails.getUsername(), role, profileId);
     }
 }

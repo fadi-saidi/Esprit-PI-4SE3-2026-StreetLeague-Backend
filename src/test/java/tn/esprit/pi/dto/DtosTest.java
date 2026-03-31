@@ -50,7 +50,7 @@ class DtosTest {
     @Test
     void authResponse_ShouldCreateWithTokenAndUserInfo() {
         // Act
-        AuthResponse response = new AuthResponse("jwt-token", "user@example.com", "ROLE_PLAYER", 1L);
+        AuthResponse response = new AuthResponse(1L, "jwt-token", "user@example.com", "ROLE_PLAYER", 1L);
 
         // Assert
         assertEquals("jwt-token", response.token());

@@ -5,22 +5,23 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import tn.esprit.pi.security.CustomUserDetailsService;
 
 import java.io.IOException;
+import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final CustomUserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(
@@ -40,27 +41,32 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // Extract raw token (remove "Bearer " prefix)
         String token = authHeader.substring(7);
         String email;
+        String role;
 
         try {
             email = jwtService.extractEmail(token);
+            role = jwtService.extractRole(token);
         } catch (Exception e) {
+            log.warn("JWT parsing failed for {}: {}", request.getRequestURI(), e.getMessage());
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Validate and set authentication context
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        // Build authentication directly from JWT claims — NO database query needed
+        if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            // The role in the JWT is already "ROLE_VENUE_OWNER" format
+            var authorities = List.of(new SimpleGrantedAuthority(role));
 
-            if (jwtService.isTokenValid(token, userDetails)) {
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+            var authToken = new UsernamePasswordAuthenticationToken(
+                    email, null, authorities
+            );
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            log.debug("Authenticated user {} with role {} for {}", email, role, request.getRequestURI());
         }
 
         filterChain.doFilter(request, response);
     }
 }
+

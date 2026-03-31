@@ -22,6 +22,6 @@ public class VenueOwnerProfile {
     private String phone;
     private Boolean verified;
     
-    @OneToMany(mappedBy = "venueOwnerProfile")
+    @OneToMany(mappedBy = "venueOwnerProfile", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Venue> venues;
 }
