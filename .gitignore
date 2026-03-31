@@ -1,21 +1,17 @@
-# Maven Build Output
+# Build output
 target/
 
-# Keep only the Maven Wrapper JAR (very important)
-!.mvn/wrapper/maven-wrapper.jar
-
-# Generated folders & files
+# Generated / user files
 htmlReport/
-uploads/
 logs/
 
-# Temporary and IDE files
+# Temporary files
 .refresh
 *.log
 *.tmp
 *.bak
 
-# IDE / Editor files
+# IDE files
 .idea/
 .vscode/
 *.iml
@@ -29,7 +25,7 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Maven temporary files
+# Maven temporary
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -39,6 +35,24 @@ dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
 
-# Other unnecessary files
+# Other junk
 *.class
 hs_err_pid*
+
+# ==================== KEEP ONLY THESE ====================
+# We explicitly ignore all extra documentation except README.md
+API_REFERENCE.md
+CLEAN_BUILD.txt
+FIX_APPLIED.md
+FRONTEND_INTEGRATION.md
+FRONTEND_MIGRATION_GUIDE.md
+HELP.md
+MIGRATION_GUIDE.md
+MIGRATION_PROGRESS.md
+PLAYER_MERCHANDISE_GUIDE.md
+READY_TO_TEST.md
+SPONSORSHIP_SHOP_ENHANCEMENTS.md
+
+# Ignore all .md files except README.md
+*.md
+!README.md
