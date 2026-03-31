@@ -1,124 +1,107 @@
-# Street League - Amateur Sports Platform
+# 🏆 StreetLeague Backend - Esprit PI 2026
 
-A unified digital platform for amateur sports management with JWT authentication and role-based access control.
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.3-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
+![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=json-web-tokens&logoColor=white)
 
-## Features
+Welcome to the *StreetLeague Backend* repository. This is the core engine of the StreetLeague platform, built with Spring Boot 3 and Java 21. It provides a robust, secure, and scalable REST API for managing amateur sports leagues, venue bookings, and a dynamic sponsorship ecosystem.
 
-- **User Management**: Multiple user roles (Admin, Player, Coach, Referee, Health Professional, Sponsor, Venue Owner)
-- **Event Management**: Matches, tournaments, and training sessions
-- **Venue Booking**: Reserve sports fields and venues
-- **Health Tracking**: Medical records and injury management
-- **Digital Wallet**: Secure payment system
-- **Community**: Posts, comments, and social features
-- **Carpooling**: Coordinate transportation to events
-- **Fantasy Sports**: Virtual teams and rewards
-- **Shop & E-commerce**: Complete shopping experience with cart, checkout, orders, and reviews
-- **Player Merchandise**: Players can submit merchandise for admin approval before selling
-- **Sponsorship Management**: Submit, approve, and manage sponsorships with payment proof
+---
 
-## Tech Stack
+## ✨ Features
 
-- **Backend**: Spring Boot 4.0.3, Java 21
-- **Security**: Spring Security + JWT
-- **Database**: MySQL
-- **ORM**: JPA/Hibernate
+The backend orchestrates several mission-critical modules:
 
-## API Endpoints
+### 🔐 Advanced Security & Auth
+- *JWT Authentication*: Stateless authentication with encrypted tokens.
+- *Role-Based Access Control (RBAC)*: Support for 7+ unique roles (Admin, Player, Coach, Referee, Sponsor, etc.).
+- *Password Protection*: BCrypt encryption for user credentials.
 
-### Authentication
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - Login and get JWT token
+### 💰 Sponsorship & Economy
+- *Request Lifecycle*: Sponsors can submit requests, and Admins approve or reject them.
+- *Proof of Payment*: Secure handling of payment confirmation documents.
+- *Dynamic Sponsorships*: Integration with teams, venues, and specific events.
 
-### Sponsorship Management
-- `GET /sponsorships/{id}` - View sponsorship details (Public)
-- `GET /sponsorships/team/{teamId}` - List team sponsorships (Public)
-- `GET /sponsorships/event/{eventId}` - List event sponsorships (Public)
-- `GET /sponsorships/venue/{venueId}` - List venue sponsorships (Public)
-- `POST /sponsorships/submit` - Submit sponsorship request (Sponsor)
-- `GET /sponsorships/my-sponsorships` - View my sponsorships (Sponsor)
-- `PUT /sponsorships/{id}/renew` - Renew sponsorship (Sponsor)
-- `POST /sponsorships/{id}/payment-proof` - Upload payment proof (Sponsor)
-- `GET /sponsorships/admin/stats` - Admin statistics (Admin)
-- `PUT /sponsorships/admin/{id}/approve` - Approve sponsorship (Admin)
-- `PUT /sponsorships/admin/{id}/reject` - Reject sponsorship (Admin)
+### 🛒 E-commerce & Merchandise
+- *Shopping Cart*: Real-time cart management with stock validation.
+- *Player Merch*: Players can submit custom merchandise for Admin approval before listing.
+- *Orders*: Full lifecycle management (Pending -> Processing -> Shipped -> Delivered).
 
-### Player Merchandise
-- `POST /player-merch/submit` - Submit merchandise for approval (Player)
-- `GET /player-merch/my-submissions` - View my submissions (Player)
-- `PUT /player-merch/{id}` - Update pending merchandise (Player)
-- `GET /player-merch/admin/pending` - View pending submissions (Admin)
-- `PUT /player-merch/admin/{id}/approve` - Approve merchandise (Admin)
-- `PUT /player-merch/admin/{id}/reject` - Reject merchandise (Admin)
-- `GET /player-merch/admin/stats` - Admin statistics (Admin)
+### 🏟️ Sports Management
+- *Venues*: Management of sports facilities and their reservation systems.
+- *Events*: Coordination of matches, tournaments, and training sessions.
+- *Carpooling*: Logic for coordinating transportation for team members.
 
-### Wallet Integration
-- `GET /wallet/balance` - Get wallet balance and points (Authenticated)
-- `GET /wallet/transactions` - Get transaction history (Authenticated)
-- `GET /wallet/stats` - Get wallet statistics (Authenticated)
+---
 
-### Shop & Products
-- `GET /products` - List all products (Public)
-- `GET /products/{id}` - Product details (Public)
-- `GET /products/search` - Search & filter products (Public)
-- `GET /products/{id}/reviews` - View product reviews (Public)
-- `POST /products/{id}/reviews` - Add product review (Authenticated)
-- `GET /products/low-stock` - Low stock alert (Admin)
+## 🛠️ Technology Stack
 
-### Shopping Cart
-- `GET /cart` - View cart (Authenticated)
-- `POST /cart/add/{productId}` - Add to cart (Authenticated)
-- `PUT /cart/update/{itemId}` - Update cart item (Authenticated)
-- `DELETE /cart/remove/{itemId}` - Remove from cart (Authenticated)
+- *Core Framework*: Spring Boot 3.4.3
+- *Language*: Java 21 (LTS)
+- *Database*: MySQL 8.0
+- *ORM*: Spring Data JPA / Hibernate
+- *Security*: Spring Security 6.x + JJWT (JSON Web Token)
+- *Utilities*: Lombok, Jackson (JSON), Maven
+- *Environment*: Local environment at http://localhost:8089/SpringSecurity
 
-### Orders
-- `POST /orders/checkout` - Create order from cart (Authenticated)
-- `GET /orders/my-orders` - View my orders (Authenticated)
-- `GET /orders/{orderId}` - Order details (Authenticated)
+---
 
-### Role-Based Access
-- `/admin/**` - Admin only
-- `/player/**` - Player only
-- `/coach/**` - Coach only
-- `/referee/**` - Referee only
-- `/health/**` - Health Professional only
-- `/sponsor/**` - Sponsor only
-- `/venue/**` - Venue Owner only
+## 🚀 Getting Started
 
-## Setup
+### Prerequisites
+- *JDK 21*
+- *Maven 3.8+*
+- *MySQL 8.0*
 
-1. Clone the repository
-2. Configure MySQL database in `application.properties`
-3. Run database migration: `mysql -u root -p pi < database_migration.sql`
-4. Run: `mvn spring-boot:run`
-5. Server runs on: `http://localhost:8089/SpringSecurity`
+### Installation & Run
+1.  *Configure the Database*:
+    - Build a database named pi in MySQL.
+    - Update src/main/resources/application.properties with your MySQL credentials.
+2.  *Initialize the Schema*:
+    - Run the SQL script found in database_migration.sql to set up the tables.
+3.  *Build & Run*:
+    
+    mvn clean install
+    mvn spring-boot:run
+    
+    Or use the provided batch scripts:
+    
+cmd
+    run-app.bat
+    
 
-## Documentation
+---
 
-- **API Reference**: See `API_REFERENCE.md` for detailed endpoint documentation
-- **Module Enhancements**: See `SPONSORSHIP_SHOP_ENHANCEMENTS.md` for feature details
-- **Database Migration**: See `database_migration.sql` for schema updates
+## 📁 Project Architecture
 
-## Database Configuration
+text
+src/main/java/tn/esprit/PI/
+├── controller/    # REST API Controllers (Exposition)
+├── service/       # Business Logic Layer
+├── repository/    # Data Access Layer (Spring Data JPA)
+├── domain/        # JPA Entities (Database Schema)
+├── dto/           # Data Transfer Objects (Payloads)
+├── security/      # Security filters & JWT configurations
+└── config/        # General Bean & App configurations
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/pi
-spring.datasource.username=root
-spring.datasource.password=
-```
+---
 
-## User Roles
+## 📖 API Documentation
 
-- `ADMIN` - Platform administration
-- `PLAYER` - Athletes and players
-- `COACH` - Team coaches
-- `REFEREE` - Match officials
-- `HEALTH_PROFESSIONAL` - Medical staff
-- `SPONSOR` - Event sponsors
-- `VENUE_OWNER` - Field/venue owners
+The project includes built-in documentation for developers:
+- *Detailed Endpoints*: See [API_REFERENCE.md](API_REFERENCE.md)
+- *Sponsorship Details*: See [SPONSORSHIP_SHOP_ENHANCEMENTS.md](SPONSORSHIP_SHOP_ENHANCEMENTS.md)
+- *Integration Guide*: See [FRONTEND_INTEGRATION.md](FRONTEND_INTEGRATION.md)
 
-## Security
+---
 
-- JWT-based stateless authentication
-- Role-based authorization
-- CORS enabled for Angular frontend (localhost:4200)
-- Password encryption with BCrypt
+## 🧪 Testing & Quality
+- *Unit Testing*: JUnit 5 & Mockito.
+- *Coverage*: JaCoCo reports are generated after running tests.
+- *Batch Tools*: Use test-and-run.bat for quick validation.
+
+---
+
+## 📄 License
+Academic Project - Esprit University 2026. All rights reserved.
