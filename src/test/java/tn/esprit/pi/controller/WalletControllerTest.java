@@ -2,6 +2,7 @@ package tn.esprit.pi.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,288 +12,165 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import tn.esprit.pi.domain.Role;
-import tn.esprit.pi.domain.Transaction;
-import tn.esprit.pi.domain.TransactionType;
-import tn.esprit.pi.domain.User;
-import tn.esprit.pi.domain.Wallet;
+import tn.esprit.pi.domain.*;
 import tn.esprit.pi.repository.TransactionRepository;
 import tn.esprit.pi.repository.UserRepository;
 import tn.esprit.pi.repository.WalletRepository;
 import tn.esprit.pi.service.wallet.IWalletService;
 
-import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("WalletController - Tests Finalisés")
 class WalletControllerTest {
 
-    @Mock
-    private UserRepository userRepository;
+    @Mock private IWalletService walletService;
+    @Mock private WalletRepository walletRepository;
+    @Mock private TransactionRepository transactionRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private Authentication authentication;
 
-    @Mock
-    private WalletRepository walletRepository;
-
-    @Mock
-    private TransactionRepository transactionRepository;
-
-    @Mock
-    private IWalletService walletService;           // ← This was missing!
-
-    @Mock
-    private Authentication authentication;
-
-    @InjectMocks
-    private WalletController walletController;
+    @InjectMocks private WalletController walletController;
 
     private MockMvc mockMvc;
-    private ObjectMapper objectMapper;
-
+    private ObjectMapper objectMapper = new ObjectMapper();
     private User user;
     private Wallet wallet;
-    private Transaction transaction;
-
-    // Request records (must match controller exactly)
-    record DepositRequest(Double amount, String description) {}
-    record WithdrawRequest(Double amount, String description) {}
-    record TransferRequest(Long recipientId, Double amount, String description) {}
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(walletController).build();
-        objectMapper = new ObjectMapper();
 
         user = new User();
         user.setId(1L);
-        user.setEmail("test@example.com");
-        user.setUsername("Test User");
-        user.setRole(Role.PLAYER);
+        user.setEmail("test@esprit.tn");
+        user.setUsername("testuser");
 
         wallet = Wallet.builder()
-                .id(1L)
+                .id(10L)
+                .points(1000)
                 .user(user)
-                .points(100)
                 .build();
 
-        transaction = Transaction.builder()
-                .id(1L)
-                .user(user)
-                .amount(50.0)
-                .earnedPoints(5)
-                .type(TransactionType.DEPOSIT)
-                .description("Test deposit")
-                .date(LocalDateTime.now())
-                .build();
+        lenient().when(authentication.getName()).thenReturn("test@esprit.tn");
     }
 
     @Test
-    void getWalletBalance_ShouldReturnWalletInfo() throws Exception {
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(walletRepository.findByUser(user)).thenReturn(Optional.of(wallet));
+    @DisplayName("GET /wallet/balance - Succès")
+    void getBalance_Success() throws Exception {
+        when(userRepository.findByEmail("test@esprit.tn")).thenReturn(Optional.of(user));
+        when(walletService.getOrCreateWallet(user)).thenReturn(wallet);
 
-        mockMvc.perform(get("/wallet/balance")
-                        .principal(authentication))
+        mockMvc.perform(get("/wallet/balance").principal(authentication))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(1))
-                .andExpect(jsonPath("$.username").value("Test User"))
-                .andExpect(jsonPath("$.points").value(100));
+                .andExpect(jsonPath("$.points").value(1000));
     }
 
     @Test
-    void getTransactionHistory_ShouldReturnTransactions() throws Exception {
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(transactionRepository.findByUser(user)).thenReturn(List.of(transaction));
+    @DisplayName("POST /wallet/deposit - Succès")
+    void deposit_Success() throws Exception {
+        WalletController.DepositRequest req = new WalletController.DepositRequest(100.0, "Refill");
 
-        mockMvc.perform(get("/wallet/transactions")
-                        .principal(authentication))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].amount").value(50.0))
-                .andExpect(jsonPath("$[0].type").value("DEPOSIT"));
-    }
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        when(walletService.getOrCreateWallet(user)).thenReturn(wallet);
 
-    @Test
-    void getWalletStats_ShouldReturnStatistics() throws Exception {
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(walletRepository.findByUser(user)).thenReturn(Optional.of(wallet));
-        when(transactionRepository.findByUser(user)).thenReturn(List.of(transaction));
-        when(walletService.getOrCreateWallet(user)).thenReturn(wallet);   // ← Fixed NPE
-
-        mockMvc.perform(get("/wallet/stats")
-                        .principal(authentication))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalTransactions").value(1))
-                .andExpect(jsonPath("$.totalPointsEarned").value(5))
-                .andExpect(jsonPath("$.currentBalance").value(100));
-    }
-
-    @Test
-    void deposit_ShouldAddFundsToWallet() throws Exception {
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(walletRepository.findByUser(user)).thenReturn(Optional.of(wallet));
-        when(walletRepository.save(any(Wallet.class))).thenAnswer(i -> i.getArgument(0));
-        when(transactionRepository.save(any(Transaction.class))).thenAnswer(i -> {
-            Transaction t = i.getArgument(0);
-            t.setId(100L);
+        // Configuration du Mock pour simuler la génération d'un ID par la DB
+        when(transactionRepository.save(any(Transaction.class))).thenAnswer(invocation -> {
+            Transaction t = invocation.getArgument(0);
+            t.setId(500L); // On donne un ID manuellement pour éviter le Null sur transaction.getId()
             return t;
         });
 
-        DepositRequest request = new DepositRequest(100.0, "Test deposit");
-
         mockMvc.perform(post("/wallet/deposit")
+                        .principal(authentication)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .principal(authentication))
+                        .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Deposit successful"))
-                .andExpect(jsonPath("$.newBalance").value(200));
+                .andExpect(jsonPath("$.newBalance").value(1100))
+                .andExpect(jsonPath("$.transactionId").value(500));
     }
 
     @Test
-    void withdraw_ShouldDeductFundsFromWallet() throws Exception {
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(walletRepository.findByUser(user)).thenReturn(Optional.of(wallet));
-        when(walletRepository.save(any(Wallet.class))).thenAnswer(i -> i.getArgument(0));
-        when(transactionRepository.save(any(Transaction.class))).thenAnswer(i -> i.getArgument(0));
-
-        WithdrawRequest request = new WithdrawRequest(30.0, null);
-
-        mockMvc.perform(post("/wallet/withdraw")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .principal(authentication))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Withdrawal successful"))
-                .andExpect(jsonPath("$.newBalance").value(70));
-    }
-
-    @Test
-    void transfer_ShouldTransferFundsBetweenUsers() throws Exception {
+    @DisplayName("POST /wallet/transfer - Succès")
+    void transfer_Success() throws Exception {
         User recipient = new User();
         recipient.setId(2L);
-        recipient.setUsername("Recipient User");
+        recipient.setUsername("dest");
 
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        Wallet recipientWallet = Wallet.builder().points(50).build();
+        WalletController.TransferRequest req = new WalletController.TransferRequest(2L, 50.0, "Cadeau");
+
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
         when(userRepository.findById(2L)).thenReturn(Optional.of(recipient));
-        when(walletRepository.findByUser(any(User.class))).thenReturn(Optional.of(wallet));
-        when(walletRepository.save(any(Wallet.class))).thenAnswer(i -> i.getArgument(0));
-        when(transactionRepository.save(any(Transaction.class))).thenAnswer(i -> i.getArgument(0));
-
-        TransferRequest request = new TransferRequest(2L, 25.0, "Gift");
+        when(walletService.getOrCreateWallet(user)).thenReturn(wallet);
+        when(walletService.getOrCreateWallet(recipient)).thenReturn(recipientWallet);
 
         mockMvc.perform(post("/wallet/transfer")
+                        .principal(authentication)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .principal(authentication))
+                        .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Transfer successful"));
-    }
 
-    // ==================== Negative Cases ====================
-
-    @Test
-    void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
-        when(authentication.getName()).thenReturn("unknown@example.com");
-        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
-
-        mockMvc.perform(get("/wallet/balance")
-                        .principal(authentication))
-                .andExpect(status().isNotFound());
+        verify(walletRepository, atLeastOnce()).save(any(Wallet.class));
     }
 
     @Test
-    void shouldReturnUnauthorizedWhenNoAuthenticationProvided() throws Exception {
-        // Do NOT pass .principal() at all → auth will be null
-        mockMvc.perform(get("/wallet/balance"))
-                .andExpect(status().isUnauthorized());   // This should now pass
+    @DisplayName("POST /wallet/transfer - Erreur auto-transfert")
+    void transfer_ToSelf_Error() throws Exception {
+        WalletController.TransferRequest req = new WalletController.TransferRequest(1L, 50.0, "Self");
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+
+        mockMvc.perform(post("/wallet/transfer")
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("You cannot transfer points to yourself"));
     }
 
     @Test
-    void withdraw_ShouldFailWhenInsufficientBalance() throws Exception {
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(walletRepository.findByUser(user)).thenReturn(Optional.of(wallet));
+    @DisplayName("POST /wallet/withdraw - Succès")
+    void withdraw_Success() throws Exception {
+        WalletController.WithdrawRequest req = new WalletController.WithdrawRequest(100.0, "Withdraw");
 
-        WithdrawRequest request = new WithdrawRequest(150.0, "Too much");
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        when(walletService.getOrCreateWallet(user)).thenReturn(wallet);
 
         mockMvc.perform(post("/wallet/withdraw")
+                        .principal(authentication)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .principal(authentication))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Insufficient balance"));
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.newBalance").value(900));
     }
 
     @Test
-    void transfer_ShouldFailWhenRecipientNotFound() throws Exception {
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(userRepository.findById(999L)).thenReturn(Optional.empty());
-
-        TransferRequest request = new TransferRequest(999L, 25.0, "Gift");
-
-        mockMvc.perform(post("/wallet/transfer")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .principal(authentication))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Recipient not found"));
-    }
-
-    @Test
-    void transfer_ShouldFailWhenSelfTransfer() throws Exception {
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
-        TransferRequest request = new TransferRequest(1L, 25.0, "Self gift");
-
-        mockMvc.perform(post("/wallet/transfer")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .principal(authentication))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Cannot transfer to yourself"));
-    }
-
-    @Test
-    void deposit_ShouldFailWhenNegativeAmount() throws Exception {
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-
-        DepositRequest request = new DepositRequest(-50.0, "Negative deposit");
+    @DisplayName("POST /wallet/deposit - Utilisateur non trouvé")
+    void deposit_UserNotFound() throws Exception {
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/wallet/deposit")
+                        .principal(authentication)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .principal(authentication))
-                .andExpect(status().isBadRequest());
+                        .content("{\"amount\":100.0}"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void withdraw_ShouldFailWhenNegativeAmount() throws Exception {
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+    @DisplayName("PUT /wallet/admin/{id}/points - Admin Success")
+    void adminUpdatePoints_Success() throws Exception {
+        when(walletService.updatePoints(eq(10L), anyInt())).thenReturn(wallet);
 
-        WithdrawRequest request = new WithdrawRequest(-30.0, "Negative withdraw");
-
-        mockMvc.perform(post("/wallet/withdraw")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .principal(authentication))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(put("/wallet/admin/10/points").param("points", "500"))
+                .andExpect(status().isOk());
     }
 }

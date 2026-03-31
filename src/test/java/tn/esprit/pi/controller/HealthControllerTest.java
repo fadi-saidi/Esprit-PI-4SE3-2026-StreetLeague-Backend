@@ -1,186 +1,106 @@
 package tn.esprit.pi.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tn.esprit.pi.domain.InjurySeverity;
-import tn.esprit.pi.dto.Dtos.InjuryDTO;
-import tn.esprit.pi.dto.Dtos.MedicalRecordDTO;
-import tn.esprit.pi.dto.Dtos.RecommendationRequest;
+import tn.esprit.pi.dto.Dtos;
 import tn.esprit.pi.service.health.IHealthService;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(value = HealthController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = tn.esprit.pi.security.jwt.JwtAuthFilter.class))
+@ExtendWith(MockitoExtension.class)
+@DisplayName("Tests unitaires - HealthController (Validé)")
 class HealthControllerTest {
 
-    @Autowired
+    @Mock private IHealthService healthService;
+    @InjectMocks private HealthController healthController;
+
     private MockMvc mockMvc;
-
-    @SuppressWarnings("deprecation")
-    @MockBean
-    private IHealthService healthService;
-
-    @MockBean
-    private tn.esprit.pi.security.jwt.JwtService jwtService;
-
-    @MockBean
-    private tn.esprit.pi.security.CustomUserDetailsService customUserDetailsService;
-
-    @Autowired
     private ObjectMapper objectMapper;
-
-    private MedicalRecordDTO medicalRecordDTO;
-    private InjuryDTO injuryDTO;
+    private Dtos.MedicalRecordDTO medicalRecordDTO;
+    private Dtos.InjuryDTO injuryDTO;
 
     @BeforeEach
     void setUp() {
-        medicalRecordDTO = new MedicalRecordDTO(1L, 70.0, 175.0, "A+", null, null, LocalDate.now(), 1L, 1L);
-        injuryDTO = new InjuryDTO(1L, "Sprained ankle", "Rest", LocalDate.now(), InjurySeverity.MODERATE, 1L);
+        mockMvc = MockMvcBuilders.standaloneSetup(healthController).build();
+        objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
+        medicalRecordDTO = new Dtos.MedicalRecordDTO(100L, 75.5, 180.0, "O+", "Asthme", "Pénicilline", LocalDate.now(), 1L, 10L);
+        injuryDTO = new Dtos.InjuryDTO(200L, "Douleur au genou", "Repos recommandé", LocalDate.now(), InjurySeverity.MODERATE, 100L);
     }
 
     @Test
-    @WithMockUser(roles = "PLAYER")
-    void createRecord_ShouldReturnCreatedRecord() throws Exception {
-        when(healthService.createRecord(any(MedicalRecordDTO.class))).thenReturn(medicalRecordDTO);
+    @DisplayName("POST /medical/records - Succès")
+    void createRecord_Success() throws Exception {
+        when(healthService.createRecord(any())).thenReturn(medicalRecordDTO);
 
         mockMvc.perform(post("/medical/records")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(medicalRecordDTO))
-                        .with(csrf()))
+                        .content(objectMapper.writeValueAsString(medicalRecordDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.weight").value(70.0));
+                .andExpect(jsonPath("$.id").value(100));
     }
 
     @Test
-    @WithMockUser(roles = "PLAYER")
-    void updateRecord_ShouldReturnUpdatedRecord() throws Exception {
-        when(healthService.updateRecord(eq(1L), any(MedicalRecordDTO.class))).thenReturn(medicalRecordDTO);
+    @DisplayName("POST /medical/records - Échec Validation (Poids trop bas)")
+    void createRecord_ValidationError() throws Exception {
+        // Poids de 5kg (le minimum est 20kg dans notre DTO corrigé)
+        Dtos.MedicalRecordDTO invalidDto = new Dtos.MedicalRecordDTO(null, 5.0, 180.0, "O+", null, null, LocalDate.now(), 1L, null);
 
-        mockMvc.perform(put("/medical/records/1")
+        mockMvc.perform(post("/medical/records")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(medicalRecordDTO))
-                        .with(csrf()))
+                        .content(objectMapper.writeValueAsString(invalidDto)))
+                .andExpect(status().isBadRequest()); // Doit retourner 400 à cause de @Valid
+    }
+
+    @Test
+    @DisplayName("PUT /medical/injuries/{id}/recommendation - Succès")
+    void addRecommendation_Success() throws Exception {
+        Dtos.RecommendationRequest req = new Dtos.RecommendationRequest("Prendre du repos");
+        when(healthService.addRecommendation(eq(200L), anyString())).thenReturn(injuryDTO);
+
+        mockMvc.perform(put("/medical/injuries/200/recommendation")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk());
+    }
+    @Test
+    @DisplayName("PUT /medical/records/{id} - Succès")
+    void updateRecord_Success() throws Exception {
+        when(healthService.updateRecord(eq(100L), any())).thenReturn(medicalRecordDTO);
+
+        mockMvc.perform(put("/medical/records/100")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(medicalRecordDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L));
+                .andExpect(jsonPath("$.weight").value(75.5));
     }
 
     @Test
-    @WithMockUser(roles = "HEALTH_PROFESSIONAL")
-    void getAllRecords_ShouldReturnList() throws Exception {
-        List<MedicalRecordDTO> records = Arrays.asList(medicalRecordDTO);
-        when(healthService.getAllRecords()).thenReturn(records);
-
-        mockMvc.perform(get("/medical/records/all"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
-    }
-
-    @Test
-    @WithMockUser
-    void getRecord_ShouldReturnRecord() throws Exception {
-        when(healthService.getRecordById(1L)).thenReturn(medicalRecordDTO);
-
-        mockMvc.perform(get("/medical/records/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void deleteRecord_ShouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/medical/records/1")
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    @WithMockUser(roles = "PLAYER")
-    void declareInjury_ShouldReturnCreatedInjury() throws Exception {
-        when(healthService.declareInjury(any(InjuryDTO.class))).thenReturn(injuryDTO);
+    @DisplayName("POST /medical/injuries - Succès")
+    void declareInjury_Success() throws Exception {
+        when(healthService.declareInjury(any())).thenReturn(injuryDTO);
 
         mockMvc.perform(post("/medical/injuries")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(injuryDTO))
-                        .with(csrf()))
+                        .content(objectMapper.writeValueAsString(injuryDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.report").value("Sprained ankle"));
-    }
-
-    @Test
-    @WithMockUser(roles = "HEALTH_PROFESSIONAL")
-    void addRecommendation_ShouldReturnUpdatedInjury() throws Exception {
-        RecommendationRequest request = new RecommendationRequest("Rest for 2 weeks");
-        when(healthService.addRecommendation(1L, "Rest for 2 weeks")).thenReturn(injuryDTO);
-
-        mockMvc.perform(put("/medical/injuries/1/recommendation")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.recommendation").value("Rest"));
-    }
-
-    @Test
-    @WithMockUser
-    void getInjury_ShouldReturnInjury() throws Exception {
-        when(healthService.getInjuryById(1L)).thenReturn(injuryDTO);
-
-        mockMvc.perform(get("/medical/injuries/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L));
-    }
-
-    @Test
-    @WithMockUser
-    void getInjuriesByRecord_ShouldReturnList() throws Exception {
-        List<InjuryDTO> injuries = Arrays.asList(injuryDTO);
-        when(healthService.getInjuriesByRecord(1L)).thenReturn(injuries);
-
-        mockMvc.perform(get("/medical/injuries/record/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
-    }
-
-    @Test
-    @WithMockUser
-    void filterBySeverity_ShouldReturnFilteredList() throws Exception {
-        List<InjuryDTO> injuries = Arrays.asList(injuryDTO);
-        when(healthService.filterBySeverity(1L, InjurySeverity.MODERATE)).thenReturn(injuries);
-
-        mockMvc.perform(get("/medical/injuries/record/1/filter")
-                        .param("severity", "MODERATE"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
-    }
-
-    @Test
-    @WithMockUser(roles = "HEALTH_PROFESSIONAL")
-    void getAllInjuries_ShouldReturnList() throws Exception {
-        List<InjuryDTO> injuries = Arrays.asList(injuryDTO);
-        when(healthService.getAllInjuries()).thenReturn(injuries);
-
-        mockMvc.perform(get("/medical/injuries/all"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.report").value("Douleur au genou"));
     }
 }

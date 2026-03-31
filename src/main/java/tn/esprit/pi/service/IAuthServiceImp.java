@@ -12,7 +12,7 @@ import tn.esprit.pi.dto.Dtos.LoginRequest;
 import tn.esprit.pi.dto.Dtos.RegisterRequest;
 import tn.esprit.pi.repository.*;
 import tn.esprit.pi.security.CustomUserDetailsService;
-import tn.esprit.pi.security.jwt.JwtService;
+import tn.esprit.pi.security.JwtService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

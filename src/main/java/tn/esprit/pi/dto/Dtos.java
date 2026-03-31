@@ -1,39 +1,34 @@
 package tn.esprit.pi.dto;
 
+import jakarta.validation.constraints.*;
 import tn.esprit.pi.domain.InjurySeverity;
 import tn.esprit.pi.domain.Role;
-import tn.esprit.pi.domain.TransactionType;
-
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public class Dtos {
 
-    public record RegisterRequest(
+    // --- AUTH DTOs (Ceux qui manquaient) ---
 
-            String fullName,
-            String email,
-            String password,
-            Role role,
-            // Player
+    public record RegisterRequest(
+            @NotBlank(message = "Full name is required") String fullName,
+            @NotBlank(message = "Email is required") @Email(message = "Invalid email format") String email,
+            @NotBlank(message = "Password is required") @Size(min = 6, message = "Password min 6 chars") String password,
+            @NotNull(message = "Role is required") Role role,
             String dateOfBirth,
-            // Health Professional, Referee, Coach
             String certificate,
             String licenseNumber,
             String specialty,
             Integer experienceYears,
-            // Sponsor
             String companyName,
             String logo,
             String contactEmail,
             Double budget,
-            // Venue Owner
             String phone
     ) {}
 
     public record LoginRequest(
-            String email,
-            String password
+            @NotBlank(message = "Email is required") @Email String email,
+            @NotBlank(message = "Password is required") String password
     ) {}
 
     public record AuthResponse(
@@ -44,55 +39,52 @@ public class Dtos {
             Long profileId
     ) {}
 
+    // --- WALLET DTOs ---
 
-
-    // Request body for deposit and withdraw: { "amount": 50.0 }
     public record DepositRequest(
-            Double amount
+            @NotNull @Positive(message = "Amount must be greater than 0") Double amount,
+            String description
     ) {}
 
-    // Request body for transfer: { "toUserId": 7, "amount": 20.0 }
     public record TransferRequest(
-            Long toUserId,
-            Double amount
+            @NotNull(message = "Recipient ID is required") Long recipientId,
+            @NotNull @Positive(message = "Amount must be greater than 0") Double amount,
+            String description
     ) {}
 
-    // =========================================================
-    //  HEALTH DTOs
-    // =========================================================
+    public record WithdrawRequest(
+            @NotNull @Positive(message = "Amount must be greater than 0") Double amount,
+            String description
+    ) {}
+
+    // --- HEALTH DTOs ---
 
     public record MedicalRecordDTO(
             Long id,
-            Double weight,
-            Double height,
-            String bloodType,
+            @NotNull @DecimalMin(value = "20.0") @DecimalMax(value = "300.0") Double weight,
+            @NotNull @DecimalMin(value = "50.0") @DecimalMax(value = "250.0") Double height,
+            @NotBlank String bloodType,
             String chronicDiseases,
             String allergies,
-            LocalDate lastCheckup,
-            Long playerProfileId,
+            @PastOrPresent LocalDate lastCheckup,
+            @NotNull Long playerProfileId,
             Long healthProfessionalId
     ) {}
 
     public record InjuryDTO(
             Long id,
-            String report,
+            @NotBlank String report,
             String recommendation,
-            LocalDate date,
-            InjurySeverity severity,
-            Long medicalRecordId
+            @NotNull @PastOrPresent LocalDate date,
+            @NotNull InjurySeverity severity,
+            @NotNull Long medicalRecordId
     ) {}
 
-    // Request body when doctor adds advice: { "recommendation": "Rest for 2 weeks." }
     public record RecommendationRequest(
-            String recommendation
+            @NotBlank String recommendation
     ) {}
+
     public record WalletAdminDTO(
-            Long id,
-            int points,
-            Long userId,
-            String username,
-            String email,
-            String role,
-            String phone
+            Long id, int points, Long userId, String username, String email, String role, String phone
     ) {}
 }

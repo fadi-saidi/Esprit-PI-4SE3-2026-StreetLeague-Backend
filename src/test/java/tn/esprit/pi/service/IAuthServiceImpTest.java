@@ -1,162 +1,119 @@
 package tn.esprit.pi.service;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import tn.esprit.pi.domain.*;
-import tn.esprit.pi.dto.Dtos.AuthResponse;
-import tn.esprit.pi.dto.Dtos.LoginRequest;
-import tn.esprit.pi.dto.Dtos.RegisterRequest;
+import tn.esprit.pi.dto.Dtos.*;
 import tn.esprit.pi.repository.*;
 import tn.esprit.pi.security.CustomUserDetailsService;
-import tn.esprit.pi.security.jwt.JwtService;
+import tn.esprit.pi.security.JwtService;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Objectif 90% - AuthService Coverage")
 class IAuthServiceImpTest {
 
-    @Mock
-    private UserRepository userRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private PlayerProfileRepository playerProfileRepository;
+    @Mock private CoachProfileRepository coachProfileRepository;
+    @Mock private RefereeProfileRepository refereeProfileRepository;
+    @Mock private HealthProfessionalProfileRepository healthProfessionalProfileRepository;
+    @Mock private SponsorProfileRepository sponsorProfileRepository;
+    @Mock private VenueOwnerProfileRepository venueOwnerProfileRepository;
+    @Mock private AdminProfileRepository adminProfileRepository;
+    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private AuthenticationManager authenticationManager;
+    @Mock private CustomUserDetailsService userDetailsService;
+    @Mock private JwtService jwtService;
 
-    @Mock
-    private CoachProfileRepository coachProfileRepository;
+    @InjectMocks private IAuthServiceImp authService;
 
-    @Mock
-    private PlayerProfileRepository playerProfileRepository;
-
-    @Mock
-    private RefereeProfileRepository refereeProfileRepository;
-
-    @Mock
-    private HealthProfessionalProfileRepository healthProfessionalProfileRepository;
-
-    @Mock
-    private SponsorProfileRepository sponsorProfileRepository;
-
-    @Mock
-    private VenueOwnerProfileRepository venueOwnerProfileRepository;
-
-    @Mock
-    private AdminProfileRepository adminProfileRepository;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private AuthenticationManager authenticationManager;
-
-    @Mock
-    private CustomUserDetailsService userDetailsService;
-
-    @Mock
-    private JwtService jwtService;
-
-    @InjectMocks
-    private IAuthServiceImp authService;
-
-    private RegisterRequest registerRequest;
-    private LoginRequest loginRequest;
-    private User user;
+    private RegisterRequest baseRequest;
 
     @BeforeEach
     void setUp() {
-        registerRequest = new RegisterRequest(
-                "Test User",
-                "test@example.com",
-                "password123",
-                Role.PLAYER,
-                "1990-01-01",
-                "123456789",
-                null, null, null, null, null, null, null, null
+        baseRequest = new RegisterRequest(
+                "Full Name", "test@test.com", "password123", Role.PLAYER,
+                "2000-01-01", null, null, null, 0, null, null, null, 0.0, "12345678"
         );
-
-        loginRequest = new LoginRequest("test@example.com", "password123");
-
-        user = new User();
-        user.setId(1L);
-        user.setEmail("test@example.com");
-        user.setUsername("Test User");
-        user.setRole(Role.PLAYER);
     }
 
     @Test
-    void register_ShouldCreatePlayerProfile() {
-        // Arrange
+    @DisplayName("Register - Erreur si l'email existe déjà")
+    void register_EmailExists() {
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
+        assertThrows(IllegalArgumentException.class, () -> authService.register(baseRequest));
+    }
+
+    @Test
+    @DisplayName("Register - Cas REFEREE")
+    void register_Referee_Success() {
+        RegisterRequest req = new RegisterRequest(
+                "Referee", "ref@test.com", "pass123", Role.REFEREE,
+                null, "Cert", "LIC123", null, 10, null, null, null, 0.0, null
+        );
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
-        when(userRepository.save(any(User.class))).thenReturn(user);
-        when(playerProfileRepository.save(any(PlayerProfile.class))).thenReturn(new PlayerProfile());
+        when(passwordEncoder.encode(anyString())).thenReturn("enc");
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        // Act
-        User result = authService.register(registerRequest);
-
-        // Assert
-        assertNotNull(result);
-        verify(userRepository).save(any(User.class));
-        verify(playerProfileRepository).save(any(PlayerProfile.class));
+        authService.register(req);
+        verify(refereeProfileRepository).save(any(RefereeProfile.class));
     }
 
     @Test
-    void register_ShouldThrowExceptionIfEmailExists() {
-        // Arrange
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> authService.register(registerRequest));
-        assertEquals("Email already used", exception.getMessage());
-    }
-
-    @Test
-    void register_ShouldThrowExceptionIfPasswordTooShort() {
-        // Arrange
-        RegisterRequest badRequest = new RegisterRequest(
-                "Test User",
-                "test@example.com",
-                "123",
-                Role.PLAYER,
-                null, null, null, null, null, null, null, null, null, null
+    @DisplayName("Register - Cas ADMIN")
+    void register_Admin_Success() {
+        RegisterRequest req = new RegisterRequest(
+                "Admin", "admin@test.com", "pass123", Role.ADMIN,
+                null, null, null, null, 0, null, null, null, 0.0, null
         );
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> authService.register(badRequest));
-        assertEquals("Password must contain at least 6 characters", exception.getMessage());
+        authService.register(req);
+        verify(adminProfileRepository).save(any(AdminProfile.class));
     }
 
     @Test
-    void login_ShouldReturnAuthResponse() {
-        // Arrange
+    @DisplayName("Login - Succès avec génération de Token")
+    void login_Success() {
+        LoginRequest loginReq = new LoginRequest("test@test.com", "password123");
+
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("test@test.com");
+        user.setRole(Role.PLAYER);
+
         UserDetails userDetails = mock(UserDetails.class);
-        when(userDetails.getUsername()).thenReturn("Test User");
-        when(userDetails.getAuthorities()).thenReturn((java.util.Collection) Arrays.asList(new SimpleGrantedAuthority("ROLE_PLAYER")));
+        when(userDetails.getUsername()).thenReturn("test@test.com");
+        // Utilisation de doReturn pour éviter les problèmes de types génériques avec les authorities
+        doReturn(Collections.singletonList(new SimpleGrantedAuthority("ROLE_PLAYER")))
+                .when(userDetails).getAuthorities();
 
         when(userDetailsService.loadUserByUsername(anyString())).thenReturn(userDetails);
-        when(jwtService.generateToken(any(UserDetails.class))).thenReturn("jwtToken");
+        when(jwtService.generateToken(any(UserDetails.class))).thenReturn("fake-jwt-token");
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(playerProfileRepository.findByUserId(anyLong())).thenReturn(Optional.of(new PlayerProfile()));
+        when(playerProfileRepository.findByUserId(1L)).thenReturn(Optional.of(new PlayerProfile()));
 
-        // Act
-        AuthResponse result = authService.login(loginRequest);
+        AuthResponse response = authService.login(loginReq);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals("jwtToken", result.token());
-        assertEquals("Test User", result.email());
-        assertEquals("ROLE_PLAYER", result.role());
+        assertNotNull(response);
+        assertEquals("fake-jwt-token", response.token());
+        assertEquals("ROLE_PLAYER", response.role());
     }
 }

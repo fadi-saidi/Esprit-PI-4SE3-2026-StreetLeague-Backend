@@ -2,6 +2,7 @@ package tn.esprit.pi.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,135 +13,135 @@ import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tn.esprit.pi.domain.*;
-import tn.esprit.pi.dto.ShopDTOs.*;
+import tn.esprit.pi.dto.ShopDTOs;
 import tn.esprit.pi.repository.*;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Objectif 90% - CartController")
 class CartControllerTest {
 
-    @Mock
-    private CartRepository cartRepository;
+    @Mock private CartRepository cartRepository;
+    @Mock private CartItemRepository cartItemRepository;
+    @Mock private ProductRepository productRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private Authentication authentication;
 
-    @Mock
-    private CartItemRepository cartItemRepository;
-
-    @Mock
-    private ProductRepository productRepository;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private Authentication authentication;
-
-    @InjectMocks
-    private CartController cartController;
+    @InjectMocks private CartController cartController;
 
     private MockMvc mockMvc;
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper = new ObjectMapper();
     private User user;
-    private Product product;
     private Cart cart;
-    private CartItem cartItem;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(cartController).build();
-        objectMapper = new ObjectMapper();
-
         user = new User();
         user.setId(1L);
-        user.setEmail("test@example.com");
-        user.setRole(Role.PLAYER);
-
-        product = new Product();
-        product.setId(1L);
-        product.setName("Test Product");
-        product.setPrice(29.99);
-        product.setStock(10);
-        product.setCategory("Sports");
-        product.setSportType(SportType.FOOTBALL);
+        user.setEmail("test@esprit.tn");
 
         cart = new Cart();
         cart.setId(1L);
         cart.setUser(user);
-        cart.setTotalAmount(0.0);
-        cart.setCreatedAt(LocalDateTime.now());
         cart.setCartItems(new HashSet<>());
-
-        cartItem = new CartItem();
-        cartItem.setId(1L);
-        cartItem.setCart(cart);
-        cartItem.setProduct(product);
-        cartItem.setQuantity(2);
-        cartItem.setSubtotal(59.98);
     }
 
     @Test
-    void getMyCart_ShouldReturnCartResponse() throws Exception {
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+    @DisplayName("POST /add/{id} - Succès (Nouveau produit)")
+    void addToCart_NewProduct_Success() throws Exception {
+        Product p = new Product();
+        p.setId(99L);
+        p.setPrice(50.0);
+        p.setStock(10);
+        p.setName("Maillot");
+
+        ShopDTOs.AddToCartRequest req = new ShopDTOs.AddToCartRequest(2);
+
+        when(authentication.getName()).thenReturn(user.getEmail());
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        when(productRepository.findById(99L)).thenReturn(Optional.of(p));
         when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
 
-        mockMvc.perform(get("/cart")
-                        .principal(authentication))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.totalAmount").value(0.0));
-    }
-
-    @Test
-    void addToCart_ShouldReturnSuccess() throws Exception {
-        AddToCartRequest request = new AddToCartRequest(2);
-        
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
-        when(cartItemRepository.findByCartAndProduct(cart, product)).thenReturn(Optional.empty());
-        when(cartItemRepository.save(any(CartItem.class))).thenReturn(cartItem);
-        when(cartRepository.save(any(Cart.class))).thenReturn(cart);
-
-        mockMvc.perform(post("/cart/add/1")
+        mockMvc.perform(post("/cart/add/99")
+                        .principal(authentication)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .principal(authentication))
+                        .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Product added to cart successfully"));
+
+        verify(cartItemRepository).save(any(CartItem.class));
     }
 
     @Test
-    void addToCart_ShouldReturnErrorWhenProductNotFound() throws Exception {
-        AddToCartRequest request = new AddToCartRequest(2);
-        
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+    @DisplayName("POST /add/{id} - Erreur Stock Insuffisant")
+    void addToCart_InsufficientStock() throws Exception {
+        Product p = new Product();
+        p.setStock(1); // Seulement 1 en stock
+
+        ShopDTOs.AddToCartRequest req = new ShopDTOs.AddToCartRequest(5); // Demande 5
+
+        when(authentication.getName()).thenReturn(user.getEmail());
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(p));
 
         mockMvc.perform(post("/cart/add/1")
+                        .principal(authentication)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .principal(authentication))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Product not found"));
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value(org.hamcrest.Matchers.containsString("Insufficient stock")));
     }
 
     @Test
-    void addToCart_ShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
-        AddToCartRequest request = new AddToCartRequest(2);
+    @DisplayName("PUT /update/{itemId} - Succès")
+    void updateCartItem_Success() throws Exception {
+        Product p = new Product();
+        p.setPrice(10.0);
 
-        mockMvc.perform(post("/cart/add/1")
+        CartItem item = new CartItem();
+        item.setId(5L);
+        item.setCart(cart);
+        item.setProduct(p);
+
+        ShopDTOs.UpdateCartItemRequest req = new ShopDTOs.UpdateCartItemRequest(3);
+
+        when(cartItemRepository.findById(5L)).thenReturn(Optional.of(item));
+        when(authentication.getName()).thenReturn(user.getEmail());
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+        mockMvc.perform(put("/cart/update/5")
+                        .principal(authentication)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("DELETE /remove/{itemId} - Forbidden (Autre utilisateur)")
+    void removeFromCart_Forbidden() throws Exception {
+        User otherUser = new User();
+        otherUser.setEmail("other@test.tn");
+
+        Cart otherCart = new Cart();
+        otherCart.setUser(otherUser);
+
+        CartItem item = new CartItem();
+        item.setCart(otherCart);
+
+        when(cartItemRepository.findById(10L)).thenReturn(Optional.of(item));
+        when(authentication.getName()).thenReturn(user.getEmail());
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+        mockMvc.perform(delete("/cart/remove/10").principal(authentication))
+                .andExpect(status().isForbidden());
     }
 }
