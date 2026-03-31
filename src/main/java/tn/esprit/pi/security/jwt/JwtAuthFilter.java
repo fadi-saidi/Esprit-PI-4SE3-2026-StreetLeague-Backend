@@ -31,22 +31,29 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
+        System.out.println("=== JWT FILTER DEBUG ===");
+        System.out.println("Request URI: " + request.getRequestURI());
+        System.out.println("Auth Header: " + authHeader);
 
         // No token → continue without authentication (public endpoints)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("No valid Authorization header found");
             filterChain.doFilter(request, response);
             return;
         }
 
         // Extract raw token (remove "Bearer " prefix)
         String token = authHeader.substring(7);
+        System.out.println("Extracted token: " + token.substring(0, Math.min(20, token.length())) + "...");
         String email;
         String role;
 
         try {
             email = jwtService.extractEmail(token);
             role = jwtService.extractRole(token);
+            System.out.println("JWT Claims - Email: " + email + ", Role: " + role);
         } catch (Exception e) {
+            System.out.println("JWT parsing failed: " + e.getMessage());
             log.warn("JWT parsing failed for {}: {}", request.getRequestURI(), e.getMessage());
             filterChain.doFilter(request, response);
             return;
@@ -63,7 +70,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
+            System.out.println("Authentication set successfully for: " + email + " with role: " + role);
             log.debug("Authenticated user {} with role {} for {}", email, role, request.getRequestURI());
+        } else {
+            System.out.println("Authentication NOT set - email: " + email + ", role: " + role + ", existing auth: " + SecurityContextHolder.getContext().getAuthentication());
         }
 
         filterChain.doFilter(request, response);

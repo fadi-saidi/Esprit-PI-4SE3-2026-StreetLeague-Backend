@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -127,23 +128,36 @@ public class PlayerMerchController {
     }
 
     @GetMapping("/my-submissions")
-    public ResponseEntity<List<PlayerMerchResponse>> getMySubmissions(@AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+    public ResponseEntity<List<PlayerMerchResponse>> getMySubmissions(Authentication authentication) {
+        System.out.println("=== DEBUG: getMySubmissions called ===");
+        System.out.println("Authentication: " + authentication);
+        System.out.println("Principal: " + (authentication != null ? authentication.getName() : "null"));
+        
+        if (authentication == null || authentication.getName() == null) {
+            System.out.println("ERROR: Authentication is null or has no name");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         
-        Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+        String email = authentication.getName();
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        System.out.println("User lookup result: " + userOpt.isPresent());
         if (userOpt.isEmpty()) {
+            System.out.println("ERROR: User not found for email: " + email);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         
         User user = userOpt.get();
+        System.out.println("Found user: ID=" + user.getId() + ", email=" + user.getEmail() + ", role=" + user.getRole());
+        
         PlayerProfile playerProfile = playerProfileRepository.findById(user.getId()).orElse(null);
+        System.out.println("PlayerProfile lookup result: " + (playerProfile != null ? "found" : "not found"));
         if (playerProfile == null) {
+            System.out.println("ERROR: PlayerProfile not found for user ID: " + user.getId());
             return ResponseEntity.notFound().build();
         }
         
         List<PlayerMerch> submissions = playerMerchRepository.findBySellerOrderBySubmittedAtDesc(playerProfile);
+        System.out.println("Found " + submissions.size() + " submissions");
         List<PlayerMerchResponse> responses = submissions.stream().map(this::toPlayerMerchResponse).toList();
         return ResponseEntity.ok(responses);
     }
