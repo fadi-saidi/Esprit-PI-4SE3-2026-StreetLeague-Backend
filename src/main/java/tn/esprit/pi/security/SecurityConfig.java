@@ -58,6 +58,11 @@ public class SecurityConfig {
                                 "/predictions/**",
                                 "/owned-players/**"
                         ).permitAll()
+                        .requestMatchers("/posts/**").permitAll()
+                        .requestMatchers("/comments/**").permitAll()
+                        .requestMatchers("/likes/**").permitAll()
+                        .requestMatchers("/comment-reactions/**").permitAll()
+
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/sponsors/**").permitAll()
                         .requestMatchers("/shops/**").permitAll()

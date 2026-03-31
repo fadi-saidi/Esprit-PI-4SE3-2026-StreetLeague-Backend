@@ -26,6 +26,10 @@ public class OwnedPlayerServiceImpl implements IOwnedPlayerService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        // check if user is enabled/active
+        if (user.getEnabled() == null || !user.getEnabled()) {
+            throw new RuntimeException("User is inactive or signed out");
+        }
 
         VirtualTeam team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new RuntimeException("Team not found: " + teamId));
