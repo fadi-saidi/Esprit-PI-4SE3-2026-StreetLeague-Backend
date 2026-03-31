@@ -95,6 +95,8 @@ public class SecurityConfig {
                         // Player merch
                         .requestMatchers(HttpMethod.GET, "/player-merch/approved", "/player-merch/{id}").permitAll()
                         .requestMatchers("/player-merch/submit", "/player-merch/my-submissions").hasRole("PLAYER")
+                        .requestMatchers(HttpMethod.PUT, "/player-merch/{id}").hasRole("PLAYER")
+                        .requestMatchers(HttpMethod.DELETE, "/player-merch/{id}").hasRole("PLAYER")
                         .requestMatchers("/player-merch/admin/**").hasRole("ADMIN")
                         // Sponsors
                         .requestMatchers(HttpMethod.DELETE, "/sponsors/admin/**").hasRole("ADMIN")

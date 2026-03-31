@@ -48,8 +48,8 @@ public class PlayerMerchController {
                 merch.getImage(),
                 merch.getSportType(),
                 merch.getStatus(),
-                merch.getSeller() != null && merch.getSeller().getUser() != null 
-                    ? merch.getSeller().getUser().getUsername() : null,
+                merch.getSeller() != null && merch.getSeller().getUser() != null
+                        ? merch.getSeller().getUser().getUsername() : null,
                 merch.getSeller() != null ? merch.getSeller().getId() : null,
                 merch.getSubmittedAt() != null ? merch.getSubmittedAt().toString() : null,
                 merch.getApprovedAt() != null ? merch.getApprovedAt().toString() : null,
@@ -88,28 +88,29 @@ public class PlayerMerchController {
 
     @PostMapping("/submit")
     public ResponseEntity<?> submitMerch(@Valid @RequestBody PlayerMerchRequest request,
-                                         @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+                                         Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
-        Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+
+        String email = authentication.getName();
+        Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         User user = userOpt.get();
         if (!user.getRole().equals(Role.PLAYER)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Only players can submit merchandise"));
         }
-        
+
         PlayerProfile playerProfile = playerProfileRepository.findById(user.getId()).orElse(null);
         if (playerProfile == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Player profile not found"));
         }
-        
+
         PlayerMerch merch = new PlayerMerch();
         merch.setName(request.name());
         merch.setDescription(request.description());
@@ -121,7 +122,7 @@ public class PlayerMerchController {
         merch.setSeller(playerProfile);
         merch.setSubmittedAt(LocalDateTime.now());
         merch.setStatus(MerchStatus.PENDING);
-        
+
         PlayerMerch saved = playerMerchRepository.save(merch);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(toPlayerMerchResponse(saved));
@@ -132,12 +133,12 @@ public class PlayerMerchController {
         System.out.println("=== DEBUG: getMySubmissions called ===");
         System.out.println("Authentication: " + authentication);
         System.out.println("Principal: " + (authentication != null ? authentication.getName() : "null"));
-        
+
         if (authentication == null || authentication.getName() == null) {
             System.out.println("ERROR: Authentication is null or has no name");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         String email = authentication.getName();
         Optional<User> userOpt = userRepository.findByEmail(email);
         System.out.println("User lookup result: " + userOpt.isPresent());
@@ -145,17 +146,17 @@ public class PlayerMerchController {
             System.out.println("ERROR: User not found for email: " + email);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         User user = userOpt.get();
         System.out.println("Found user: ID=" + user.getId() + ", email=" + user.getEmail() + ", role=" + user.getRole());
-        
+
         PlayerProfile playerProfile = playerProfileRepository.findById(user.getId()).orElse(null);
         System.out.println("PlayerProfile lookup result: " + (playerProfile != null ? "found" : "not found"));
         if (playerProfile == null) {
             System.out.println("ERROR: PlayerProfile not found for user ID: " + user.getId());
             return ResponseEntity.notFound().build();
         }
-        
+
         List<PlayerMerch> submissions = playerMerchRepository.findBySellerOrderBySubmittedAtDesc(playerProfile);
         System.out.println("Found " + submissions.size() + " submissions");
         List<PlayerMerchResponse> responses = submissions.stream().map(this::toPlayerMerchResponse).toList();
@@ -165,28 +166,28 @@ public class PlayerMerchController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateMerch(@PathVariable Long id,
                                          @Valid @RequestBody PlayerMerchRequest request,
-                                         @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+                                         Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         Optional<PlayerMerch> merchOpt = playerMerchRepository.findById(id);
         if (merchOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         PlayerMerch merch = merchOpt.get();
-        User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+        User user = userRepository.findByEmail(authentication.getName()).orElse(null);
         if (user == null || !merch.getSeller().getId().equals(user.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "You can only update your own merchandise"));
         }
-        
+
         if (merch.getStatus() != MerchStatus.PENDING) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Can only update pending merchandise"));
         }
-        
+
         merch.setName(request.name());
         merch.setDescription(request.description());
         merch.setPrice(request.price());
@@ -194,8 +195,37 @@ public class PlayerMerchController {
         merch.setCategory(request.category());
         merch.setImage(request.image());
         merch.setSportType(request.sportType());
-        
+
         return ResponseEntity.ok(toPlayerMerchResponse(playerMerchRepository.save(merch)));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteMerch(@PathVariable Long id,
+                                         Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Optional<PlayerMerch> merchOpt = playerMerchRepository.findById(id);
+        if (merchOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        PlayerMerch merch = merchOpt.get();
+        User user = userRepository.findByEmail(authentication.getName()).orElse(null);
+        if (user == null || !merch.getSeller().getId().equals(user.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "You can only delete your own merchandise"));
+        }
+
+        // Only allow deletion of pending merchandise
+        if (merch.getStatus() != MerchStatus.PENDING) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Can only delete pending merchandise"));
+        }
+
+        playerMerchRepository.delete(merch);
+        return ResponseEntity.ok(Map.of("message", "Merchandise deleted successfully"));
     }
 
     // ─── Admin Endpoints ──────────────────────────────────────────────────────
@@ -219,28 +249,28 @@ public class PlayerMerchController {
 
     @PutMapping("/admin/{id}/approve")
     public ResponseEntity<?> approveMerch(@PathVariable Long id,
-                                          @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+                                          Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         Optional<PlayerMerch> merchOpt = playerMerchRepository.findById(id);
         if (merchOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         PlayerMerch merch = merchOpt.get();
-        User admin = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+        User admin = userRepository.findByEmail(authentication.getName()).orElse(null);
         if (admin == null || !admin.getRole().equals(Role.ADMIN)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Admin access required"));
         }
-        
+
         if (merch.getStatus() != MerchStatus.PENDING) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Can only approve pending merchandise"));
         }
-        
+
         // Create product from approved merch
         Product product = new Product();
         product.setName(merch.getName());
@@ -249,7 +279,7 @@ public class PlayerMerchController {
         product.setCategory(merch.getCategory());
         product.setImage(merch.getImage());
         product.setSportType(merch.getSportType());
-        
+
         // Find or create a default shop for player merchandise
         Shop playerShop = shopRepository.findAll().stream()
                 .filter(s -> s.getName().equals("Player Marketplace"))
@@ -260,49 +290,49 @@ public class PlayerMerchController {
                     newShop.setDescription("Player-submitted merchandise");
                     return shopRepository.save(newShop);
                 });
-        
+
         product.setShop(playerShop);
         Product savedProduct = productRepository.save(product);
-        
+
         // Update merch status
         merch.setStatus(MerchStatus.APPROVED);
         merch.setApprovedBy(admin);
         merch.setApprovedAt(LocalDateTime.now());
         merch.setProduct(savedProduct);
-        
+
         return ResponseEntity.ok(toPlayerMerchResponse(playerMerchRepository.save(merch)));
     }
 
     @PutMapping("/admin/{id}/reject")
     public ResponseEntity<?> rejectMerch(@PathVariable Long id,
                                          @Valid @RequestBody MerchApprovalRequest request,
-                                         @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+                                         Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         Optional<PlayerMerch> merchOpt = playerMerchRepository.findById(id);
         if (merchOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         PlayerMerch merch = merchOpt.get();
-        User admin = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+        User admin = userRepository.findByEmail(authentication.getName()).orElse(null);
         if (admin == null || !admin.getRole().equals(Role.ADMIN)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Admin access required"));
         }
-        
+
         if (merch.getStatus() != MerchStatus.PENDING) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Can only reject pending merchandise"));
         }
-        
+
         merch.setStatus(MerchStatus.REJECTED);
         merch.setApprovedBy(admin);
         merch.setApprovedAt(LocalDateTime.now());
         merch.setRejectionReason(request.reason());
-        
+
         return ResponseEntity.ok(toPlayerMerchResponse(playerMerchRepository.save(merch)));
     }
 }

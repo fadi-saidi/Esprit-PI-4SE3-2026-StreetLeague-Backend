@@ -1,5 +1,5 @@
 package tn.esprit.pi.domain;
 
 public enum SportType {
-    FOOTBALL, BASKETBALL, TENNIS
+    FOOTBALL, BASKETBALL, TENNIS , HANDBALL ,VOLLEYBALL
 }
