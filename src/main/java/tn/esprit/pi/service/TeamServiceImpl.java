@@ -105,25 +105,41 @@ public class TeamServiceImpl implements ITeamService {
 
     @Override
     public TeamDTO createTeam(TeamDTO dto) {
+
+        // 1. Vérifier que le captain existe
+        User captain = userRepository.findById(dto.getCaptainId())
+                .orElseThrow(() -> new RuntimeException("Captain not found"));
+
+        // 2. Vérifier que c'est un PLAYER
+        if (captain.getRole() != Role.PLAYER) {
+            throw new RuntimeException("Only players can create a team");
+        }
+
+        // 3. Créer team
         Team team = new Team();
         team.setName(dto.getName());
         team.setLogo(dto.getLogo());
+
         if (dto.getType() != null && !dto.getType().isBlank()) {
             team.setSportType(SportType.valueOf(dto.getType()));
         }
-        team.setCaptainId(dto.getCaptainId());
+
+        // 4. Le créateur = capitaine
+        team.setCaptainId(captain.getId());
         team.setCreatedAt(java.time.LocalDateTime.now());
 
         Team saved = teamRepository.save(team);
 
-        // Auto-add captain as first player
-        if (saved.getCaptainId() != null) {
-            playerProfileRepository.findByUserId(saved.getCaptainId()).ifPresent(profile -> {
-                if (saved.getPlayerProfiles() == null) saved.setPlayerProfiles(new HashSet<>());
-                saved.getPlayerProfiles().add(profile);
-                teamRepository.save(saved);
-            });
+        // 5. Ajouter automatiquement le capitaine comme joueur
+        PlayerProfile profile = playerProfileRepository.findByUserId(captain.getId())
+                .orElseThrow(() -> new RuntimeException("Player profile not found"));
+
+        if (saved.getPlayerProfiles() == null) {
+            saved.setPlayerProfiles(new HashSet<>());
         }
+
+        saved.getPlayerProfiles().add(profile);
+        teamRepository.save(saved);
 
         return toTeamDTO(saved);
     }
