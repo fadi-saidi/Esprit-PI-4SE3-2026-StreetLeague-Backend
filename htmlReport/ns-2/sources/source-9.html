@@ -1,0 +1,233 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > SponsorController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">tn.esprit.pi.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: SponsorController (tn.esprit.pi.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SponsorController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    11.1%
+  </span>
+  <span class="absValue">
+    (1/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    2.3%
+  </span>
+  <span class="absValue">
+    (1/43)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package tn.esprit.pi.controller;
+&nbsp;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.springframework.beans.factory.annotation.Value;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.security.core.Authentication;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;import org.springframework.web.multipart.MultipartFile;
+&nbsp;import tn.esprit.pi.domain.Role;
+&nbsp;import tn.esprit.pi.domain.SponsorProfile;
+&nbsp;import tn.esprit.pi.domain.User;
+&nbsp;import tn.esprit.pi.repository.SponsorProfileRepository;
+&nbsp;import tn.esprit.pi.repository.UserRepository;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.nio.file.Files;
+&nbsp;import java.nio.file.Path;
+&nbsp;import java.nio.file.Paths;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Set;
+&nbsp;import java.util.UUID;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@CrossOrigin(&quot;*&quot;)
+&nbsp;@RequestMapping(&quot;/sponsors&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class SponsorController {
+&nbsp;
+&nbsp;    private final SponsorProfileRepository sponsorProfileRepository;
+&nbsp;    private final UserRepository userRepository;
+&nbsp;
+&nbsp;    @Value(&quot;${app.upload.sponsors.dir}&quot;)
+&nbsp;    private String uploadDir;
+&nbsp;
+&nbsp;    @Value(&quot;${app.base-url}&quot;)
+&nbsp;    private String baseUrl;
+&nbsp;
+<b class="fc">&nbsp;    private static final Set&lt;String&gt; ALLOWED_TYPES = Set.of(&quot;image/jpeg&quot;, &quot;image/png&quot;, &quot;image/webp&quot;, &quot;image/gif&quot;);</b>
+&nbsp;
+&nbsp;    @GetMapping
+&nbsp;    public List&lt;SponsorProfile&gt; getAllSponsors() {
+<b class="nc">&nbsp;        return sponsorProfileRepository.findAll();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{id}&quot;)
+&nbsp;    public ResponseEntity&lt;SponsorProfile&gt; getSponsorById(@PathVariable Long id) {
+<b class="nc">&nbsp;        return sponsorProfileRepository.findById(id)</b>
+<b class="nc">&nbsp;                .map(ResponseEntity::ok)</b>
+<b class="nc">&nbsp;                .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/my-profile&quot;)
+&nbsp;    public ResponseEntity&lt;SponsorProfile&gt; getMyProfile(Authentication auth) {
+<b class="nc">&nbsp;        return userRepository.findByEmail(auth.getName())</b>
+<b class="nc">&nbsp;                .filter(user -&gt; user.getRole() == Role.SPONSOR)</b>
+<b class="nc">&nbsp;                .flatMap(user -&gt; sponsorProfileRepository.findByUserId(user.getId()))</b>
+<b class="nc">&nbsp;                .map(ResponseEntity::ok)</b>
+<b class="nc">&nbsp;                .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PutMapping(&quot;/update&quot;)
+&nbsp;    public ResponseEntity&lt;SponsorProfile&gt; updateSponsor(@RequestBody SponsorProfile sponsorDetails, Authentication auth) {
+<b class="nc">&nbsp;        return userRepository.findByEmail(auth.getName())</b>
+<b class="nc">&nbsp;                .filter(user -&gt; user.getRole() == Role.SPONSOR)</b>
+<b class="nc">&nbsp;                .flatMap(user -&gt; sponsorProfileRepository.findByUserId(user.getId()))</b>
+<b class="nc">&nbsp;                .map(profile -&gt; {</b>
+<b class="nc">&nbsp;                    profile.setCompanyName(sponsorDetails.getCompanyName());</b>
+<b class="nc">&nbsp;                    profile.setLogo(sponsorDetails.getLogo());</b>
+<b class="nc">&nbsp;                    profile.setContactEmail(sponsorDetails.getContactEmail());</b>
+<b class="nc">&nbsp;                    profile.setBudget(sponsorDetails.getBudget());</b>
+<b class="nc">&nbsp;                    return ResponseEntity.ok(sponsorProfileRepository.save(profile));</b>
+&nbsp;                })
+<b class="nc">&nbsp;                .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/upload-logo&quot;)
+&nbsp;    public ResponseEntity&lt;?&gt; uploadLogo(
+&nbsp;            @RequestParam(required = false) MultipartFile file,
+&nbsp;            @RequestParam(required = false) String imageUrl) {
+&nbsp;
+<b class="nc">&nbsp;        if (imageUrl != null &amp;&amp; !imageUrl.isBlank()) {</b>
+<b class="nc">&nbsp;            if (!imageUrl.matches(&quot;^https?://.*&quot;))</b>
+<b class="nc">&nbsp;                return ResponseEntity.badRequest().body(Map.of(&quot;error&quot;, &quot;Invalid image URL&quot;));</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(Map.of(&quot;imageUrl&quot;, imageUrl));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (file == null || file.isEmpty())</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().body(Map.of(&quot;error&quot;, &quot;No file or URL provided&quot;));</b>
+<b class="nc">&nbsp;        if (!ALLOWED_TYPES.contains(file.getContentType()))</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().body(Map.of(&quot;error&quot;, &quot;Only JPEG, PNG, WEBP, GIF allowed&quot;));</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            Path dir = Paths.get(uploadDir).toAbsolutePath();</b>
+<b class="nc">&nbsp;            Files.createDirectories(dir);</b>
+<b class="nc">&nbsp;            String ext = file.getOriginalFilename() != null &amp;&amp; file.getOriginalFilename().contains(&quot;.&quot;)</b>
+<b class="nc">&nbsp;                    ? file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(&quot;.&quot;))</b>
+<b class="nc">&nbsp;                    : &quot;.jpg&quot;;</b>
+<b class="nc">&nbsp;            String filename = UUID.randomUUID() + ext;</b>
+<b class="nc">&nbsp;            Files.copy(file.getInputStream(), dir.resolve(filename));</b>
+<b class="nc">&nbsp;            String savedUrl = baseUrl + &quot;/uploads/sponsors/&quot; + filename;</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(Map.of(&quot;imageUrl&quot;, savedUrl));</b>
+&nbsp;        } catch (IOException e) {
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().body(Map.of(&quot;error&quot;, &quot;Failed to save file&quot;));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @DeleteMapping(&quot;/admin/{id}&quot;)
+&nbsp;    public ResponseEntity&lt;?&gt; deleteSponsor(@PathVariable Long id) {
+<b class="nc">&nbsp;        return sponsorProfileRepository.findById(id)</b>
+<b class="nc">&nbsp;                .map(profile -&gt; {</b>
+<b class="nc">&nbsp;                    sponsorProfileRepository.delete(profile);</b>
+<b class="nc">&nbsp;                    return ResponseEntity.ok().build();</b>
+&nbsp;                })
+<b class="nc">&nbsp;                .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-31 03:00</div>
+</div>
+</body>
+</html>

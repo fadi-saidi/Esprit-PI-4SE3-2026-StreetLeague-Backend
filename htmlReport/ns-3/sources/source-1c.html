@@ -1,0 +1,182 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > User</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">tn.esprit.pi.domain</a>
+</div>
+
+<h1>Coverage Summary for Class: User (tn.esprit.pi.domain)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">User$HibernateInstantiator$jJhpGhiP</td>
+  </tr>
+  <tr>
+    <td class="name">User$HibernateInstantiator$RaSPejZs</td>
+  </tr>
+  <tr>
+    <td class="name">User$HibernateInstantiator$yzQms6jd</td>
+  </tr>
+  <tr>
+    <td class="name">User$HibernateProxy$1EBvhucc</td>
+  </tr>
+  <tr>
+    <td class="name">User$HibernateProxy$NjVxbuuI</td>
+  </tr>
+  <tr>
+    <td class="name">User$HibernateProxy$VGXieVeh</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package tn.esprit.pi.domain;
+&nbsp;
+&nbsp;import jakarta.persistence.*;
+&nbsp;import lombok.*;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.util.Set;
+&nbsp;
+&nbsp;@Entity
+&nbsp;@Table(name = &quot;users&quot;)
+&nbsp;@Getter
+&nbsp;@Setter
+&nbsp;@NoArgsConstructor
+&nbsp;@AllArgsConstructor
+&nbsp;@EqualsAndHashCode(of = &quot;id&quot;)
+&nbsp;public class User {
+&nbsp;    @Id
+&nbsp;    @GeneratedValue(strategy = GenerationType.IDENTITY)
+&nbsp;    private Long id;
+&nbsp;    
+&nbsp;    private String username;
+&nbsp;    private String phone;
+&nbsp;    private String email;
+&nbsp;    private String password;
+&nbsp;    
+&nbsp;    @Enumerated(EnumType.STRING)
+&nbsp;    private Role role;
+&nbsp;    
+&nbsp;    private Boolean enabled;
+&nbsp;    private String address;
+&nbsp;    private Integer rank;
+&nbsp;    private LocalDateTime createdAt;
+&nbsp;    
+&nbsp;    @OneToOne(mappedBy = &quot;user&quot;, cascade = CascadeType.ALL)
+&nbsp;    private Wallet wallet;
+&nbsp;    
+&nbsp;    @ManyToMany
+&nbsp;    @JoinTable(name = &quot;user_badge&quot;,
+&nbsp;        joinColumns = @JoinColumn(name = &quot;user_id&quot;),
+&nbsp;        inverseJoinColumns = @JoinColumn(name = &quot;badge_id&quot;))
+&nbsp;    private Set&lt;Badge&gt; badges;
+&nbsp;    
+&nbsp;    @OneToMany(mappedBy = &quot;user&quot;)
+&nbsp;    private Set&lt;Post&gt; posts;
+&nbsp;    
+&nbsp;    @OneToMany(mappedBy = &quot;user&quot;)
+&nbsp;    private Set&lt;Comment&gt; comments;
+&nbsp;    
+&nbsp;    @OneToMany(mappedBy = &quot;user&quot;)
+&nbsp;    private Set&lt;Like&gt; likes;
+&nbsp;    
+&nbsp;    @OneToMany(mappedBy = &quot;user&quot;, cascade = CascadeType.ALL, orphanRemoval = true)
+&nbsp;    private Set&lt;Cart&gt; carts;
+&nbsp;    
+&nbsp;    @OneToMany(mappedBy = &quot;driver&quot;)
+&nbsp;    private Set&lt;Car&gt; cars;
+&nbsp;    
+&nbsp;    @OneToMany(mappedBy = &quot;user&quot;)
+&nbsp;    private Set&lt;VirtualTeam&gt; virtualTeams;
+&nbsp;    
+&nbsp;    @OneToMany(mappedBy = &quot;user&quot;)
+&nbsp;    private Set&lt;OwnedPlayer&gt; ownedPlayers;
+&nbsp;    
+&nbsp;    @OneToMany(mappedBy = &quot;user&quot;)
+&nbsp;    private Set&lt;Reward&gt; rewards;
+&nbsp;    
+&nbsp;    @OneToMany(mappedBy = &quot;user&quot;)
+&nbsp;    private Set&lt;Reservation&gt; reservations;
+&nbsp;    
+&nbsp;    @OneToMany(mappedBy = &quot;user&quot;, cascade = CascadeType.ALL, orphanRemoval = true)
+&nbsp;    private Set&lt;Order&gt; orders;
+&nbsp;    
+&nbsp;    @OneToMany(mappedBy = &quot;user&quot;, cascade = CascadeType.ALL, orphanRemoval = true)
+&nbsp;    private Set&lt;ProductReview&gt; productReviews;
+&nbsp;    
+&nbsp;    // Profile relationships
+&nbsp;    @OneToOne(mappedBy = &quot;user&quot;, cascade = CascadeType.ALL)
+&nbsp;    private CoachProfile coachProfile;
+&nbsp;    
+&nbsp;    @OneToOne(mappedBy = &quot;user&quot;, cascade = CascadeType.ALL)
+&nbsp;    private PlayerProfile playerProfile;
+&nbsp;    
+&nbsp;    @OneToOne(mappedBy = &quot;user&quot;, cascade = CascadeType.ALL)
+&nbsp;    private RefereeProfile refereeProfile;
+&nbsp;    
+&nbsp;    @OneToOne(mappedBy = &quot;user&quot;, cascade = CascadeType.ALL)
+&nbsp;    private HealthProfessionalProfile healthProfessionalProfile;
+&nbsp;    
+&nbsp;    @OneToOne(mappedBy = &quot;user&quot;, cascade = CascadeType.ALL)
+&nbsp;    private SponsorProfile sponsorProfile;
+&nbsp;    
+&nbsp;    @OneToOne(mappedBy = &quot;user&quot;, cascade = CascadeType.ALL)
+&nbsp;    private VenueOwnerProfile venueOwnerProfile;
+&nbsp;    
+&nbsp;    @OneToOne(mappedBy = &quot;user&quot;, cascade = CascadeType.ALL)
+&nbsp;    private AdminProfile adminProfile;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-31 03:00</div>
+</div>
+</body>
+</html>

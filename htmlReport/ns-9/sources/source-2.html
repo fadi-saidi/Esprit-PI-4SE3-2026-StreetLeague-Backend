@@ -1,0 +1,104 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > IWalletService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">tn.esprit.pi.service.wallet</a>
+</div>
+
+<h1>Coverage Summary for Class: IWalletService (tn.esprit.pi.service.wallet)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">IWalletService$MockitoMock$sV42c3ld</td>
+  </tr>
+  <tr>
+    <td class="name">IWalletService$MockitoMock$sV42c3ld$auxiliary$a9eOTtgO</td>
+  </tr>
+  <tr>
+    <td class="name">IWalletService$MockitoMock$sV42c3ld$auxiliary$uaDBh5DX</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package tn.esprit.pi.service.wallet;
+&nbsp;
+&nbsp;import tn.esprit.pi.domain.Transaction;
+&nbsp;import tn.esprit.pi.domain.User;
+&nbsp;import tn.esprit.pi.domain.Wallet;
+&nbsp;import tn.esprit.pi.dto.Dtos;
+&nbsp;import tn.esprit.pi.dto.TransactionResponse;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;public interface IWalletService {
+&nbsp;
+&nbsp;    // ─── User operations ──────────────────────────────────────────────────────
+&nbsp;    Wallet getOrCreateWallet(User user);
+&nbsp;    Wallet getWallet(User user);
+&nbsp;    Wallet deposit(User user, Double amount);
+&nbsp;    Wallet withdraw(User user, Double amount);
+&nbsp;    void transfer(User from, Long toUserId, Double amount);
+&nbsp;    List&lt;TransactionResponse&gt; getHistory(User user);
+&nbsp;
+&nbsp;    // ─── Admin operations ──────────────────────────────────────────────────────
+&nbsp;    List&lt;Wallet&gt; getAllWallets();
+&nbsp;    Wallet getWalletById(Long id);
+&nbsp;    Wallet updatePoints(Long id, int points);
+&nbsp;    void deleteWallet(Long id);
+&nbsp;    List&lt;Dtos.WalletAdminDTO&gt; getAllWalletsAdmin();
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-31 03:00</div>
+</div>
+</body>
+</html>

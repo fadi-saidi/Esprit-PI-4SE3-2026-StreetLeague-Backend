@@ -1,0 +1,295 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CartController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">tn.esprit.pi.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: CartController (tn.esprit.pi.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CartController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (5/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    35.3%
+  </span>
+  <span class="absValue">
+    (12/34)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    41.2%
+  </span>
+  <span class="absValue">
+    (35/85)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package tn.esprit.pi.controller;
+&nbsp;
+&nbsp;import jakarta.validation.Valid;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.security.core.Authentication;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;import tn.esprit.pi.domain.*;
+&nbsp;import tn.esprit.pi.dto.ShopDTOs.*;
+&nbsp;import tn.esprit.pi.repository.*;
+&nbsp;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@CrossOrigin(&quot;*&quot;)
+&nbsp;@RequestMapping(&quot;/cart&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class CartController {
+&nbsp;
+&nbsp;    private final CartRepository cartRepository;
+&nbsp;    private final CartItemRepository cartItemRepository;
+&nbsp;    private final ProductRepository productRepository;
+&nbsp;    private final UserRepository userRepository;
+&nbsp;
+&nbsp;    // ─── Helpers ──────────────────────────────────────────────────────────────
+&nbsp;
+&nbsp;    private Cart getOrCreateCart(User user) {
+<b class="fc">&nbsp;        return cartRepository.findByUser(user).orElseGet(() -&gt; {</b>
+<b class="nc">&nbsp;            Cart c = new Cart();</b>
+<b class="nc">&nbsp;            c.setUser(user);</b>
+<b class="nc">&nbsp;            c.setCreatedAt(LocalDateTime.now());</b>
+<b class="nc">&nbsp;            c.setTotalAmount(0.0);</b>
+<b class="nc">&nbsp;            c.setCartItems(new HashSet&lt;&gt;());</b>
+<b class="nc">&nbsp;            return cartRepository.save(c);</b>
+&nbsp;        });
+&nbsp;    }
+&nbsp;
+&nbsp;    private void updateCartTotal(Cart cart) {
+<b class="fc">&nbsp;        double total = cart.getCartItems().stream().mapToDouble(CartItem::getSubtotal).sum();</b>
+<b class="fc">&nbsp;        cart.setTotalAmount(total);</b>
+<b class="fc">&nbsp;        cartRepository.save(cart);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private CartItemResponse toCartItemResponse(CartItem item) {
+<b class="nc">&nbsp;        Product p = item.getProduct();</b>
+<b class="nc">&nbsp;        ProductResponse pr = new ProductResponse(</b>
+<b class="nc">&nbsp;                p.getId(), p.getName(), p.getPrice(), p.getStock(),</b>
+<b class="nc">&nbsp;                p.getCategory(), p.getImage(), p.getSportType(), null, null</b>
+&nbsp;        );
+<b class="nc">&nbsp;        return new CartItemResponse(item.getId(), item.getQuantity(), item.getSubtotal(), pr);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private CartResponse toCartResponse(Cart cart) {
+<b class="fc">&nbsp;        List&lt;CartItemResponse&gt; items = cart.getCartItems().stream()</b>
+<b class="fc">&nbsp;                .map(this::toCartItemResponse).toList();</b>
+<b class="fc">&nbsp;        return new CartResponse(cart.getId(), cart.getTotalAmount(), items);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // ─── Endpoints ────────────────────────────────────────────────────────────
+&nbsp;
+&nbsp;    @GetMapping
+&nbsp;    public ResponseEntity&lt;CartResponse&gt; getMyCart(Authentication auth) {
+<b class="pc">&nbsp;        if (auth == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</b>
+<b class="fc">&nbsp;        User user = userRepository.findByEmail(auth.getName()).orElse(null);</b>
+<b class="pc">&nbsp;        if (user == null) return ResponseEntity.notFound().build();</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(toCartResponse(getOrCreateCart(user)));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/add/{productId}&quot;)
+&nbsp;    public ResponseEntity&lt;?&gt; addToCart(@PathVariable Long productId,
+&nbsp;                                       @Valid @RequestBody AddToCartRequest request,
+&nbsp;                                       Authentication auth) {
+&nbsp;        try {
+<b class="fc">&nbsp;            if (auth == null) {</b>
+<b class="fc">&nbsp;                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</b>
+<b class="fc">&nbsp;                    .body(Map.of(&quot;error&quot;, &quot;Authentication required&quot;));</b>
+&nbsp;            }
+&nbsp;            
+<b class="fc">&nbsp;            User user = userRepository.findByEmail(auth.getName()).orElse(null);</b>
+<b class="pc">&nbsp;            if (user == null) {</b>
+<b class="nc">&nbsp;                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</b>
+<b class="nc">&nbsp;                    .body(Map.of(&quot;error&quot;, &quot;User not found&quot;));</b>
+&nbsp;            }
+&nbsp;            
+<b class="fc">&nbsp;            Product product = productRepository.findById(productId).orElse(null);</b>
+<b class="fc">&nbsp;            if (product == null) {</b>
+<b class="fc">&nbsp;                return ResponseEntity.status(HttpStatus.NOT_FOUND)</b>
+<b class="fc">&nbsp;                    .body(Map.of(&quot;error&quot;, &quot;Product not found&quot;));</b>
+&nbsp;            }
+&nbsp;
+<b class="pc">&nbsp;            if (request.quantity() &lt;= 0 || request.quantity() &gt; 100) {</b>
+<b class="nc">&nbsp;                return ResponseEntity.badRequest()</b>
+<b class="nc">&nbsp;                    .body(Map.of(&quot;error&quot;, &quot;Invalid quantity. Must be between 1 and 100&quot;));</b>
+&nbsp;            }
+&nbsp;
+<b class="pc">&nbsp;            if (product.getStock() == null || product.getStock() &lt; request.quantity()) {</b>
+<b class="nc">&nbsp;                return ResponseEntity.badRequest()</b>
+<b class="nc">&nbsp;                    .body(Map.of(&quot;error&quot;, &quot;Insufficient stock. Available: &quot; + (product.getStock() != null ? product.getStock() : 0)));</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            Cart cart = getOrCreateCart(user);</b>
+<b class="fc">&nbsp;            CartItem existing = cartItemRepository.findByCartAndProduct(cart, product).orElse(null);</b>
+&nbsp;
+<b class="pc">&nbsp;            if (existing != null) {</b>
+<b class="nc">&nbsp;                int newQuantity = existing.getQuantity() + request.quantity();</b>
+<b class="nc">&nbsp;                if (newQuantity &gt; product.getStock()) {</b>
+<b class="nc">&nbsp;                    return ResponseEntity.badRequest()</b>
+<b class="nc">&nbsp;                        .body(Map.of(&quot;error&quot;, &quot;Cannot add more items. Total would exceed available stock&quot;));</b>
+&nbsp;                }
+<b class="nc">&nbsp;                existing.setQuantity(newQuantity);</b>
+<b class="nc">&nbsp;                existing.setSubtotal(newQuantity * product.getPrice());</b>
+<b class="nc">&nbsp;                cartItemRepository.save(existing);</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                CartItem item = new CartItem();</b>
+<b class="fc">&nbsp;                item.setCart(cart);</b>
+<b class="fc">&nbsp;                item.setProduct(product);</b>
+<b class="fc">&nbsp;                item.setQuantity(request.quantity());</b>
+<b class="fc">&nbsp;                item.setSubtotal(request.quantity() * product.getPrice());</b>
+<b class="fc">&nbsp;                cartItemRepository.save(item);</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            updateCartTotal(cart);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok(Map.of(</b>
+&nbsp;                &quot;message&quot;, &quot;Product added to cart successfully&quot;,
+<b class="fc">&nbsp;                &quot;productName&quot;, product.getName(),</b>
+<b class="fc">&nbsp;                &quot;quantity&quot;, request.quantity()</b>
+&nbsp;            ));
+&nbsp;            
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</b>
+<b class="nc">&nbsp;                .body(Map.of(&quot;error&quot;, &quot;Failed to add product to cart: &quot; + e.getMessage()));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PutMapping(&quot;/update/{itemId}&quot;)
+&nbsp;    public ResponseEntity&lt;?&gt; updateCartItem(@PathVariable Long itemId,
+&nbsp;                                            @Valid @RequestBody UpdateCartItemRequest request,
+&nbsp;                                            Authentication auth) {
+<b class="nc">&nbsp;        CartItem item = cartItemRepository.findById(itemId).orElse(null);</b>
+<b class="nc">&nbsp;        if (item == null) return ResponseEntity.notFound().build();</b>
+&nbsp;
+<b class="nc">&nbsp;        User user = userRepository.findByEmail(auth.getName()).orElse(null);</b>
+<b class="nc">&nbsp;        if (!item.getCart().getUser().equals(user)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();</b>
+&nbsp;
+<b class="nc">&nbsp;        item.setQuantity(request.quantity());</b>
+<b class="nc">&nbsp;        item.setSubtotal(request.quantity() * item.getProduct().getPrice());</b>
+<b class="nc">&nbsp;        cartItemRepository.save(item);</b>
+<b class="nc">&nbsp;        updateCartTotal(item.getCart());</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(Map.of(&quot;message&quot;, &quot;Cart updated&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @DeleteMapping(&quot;/remove/{itemId}&quot;)
+&nbsp;    public ResponseEntity&lt;?&gt; removeFromCart(@PathVariable Long itemId, Authentication auth) {
+<b class="nc">&nbsp;        CartItem item = cartItemRepository.findById(itemId).orElse(null);</b>
+<b class="nc">&nbsp;        if (item == null) return ResponseEntity.notFound().build();</b>
+&nbsp;
+<b class="nc">&nbsp;        User user = userRepository.findByEmail(auth.getName()).orElse(null);</b>
+<b class="nc">&nbsp;        if (!item.getCart().getUser().equals(user)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();</b>
+&nbsp;
+<b class="nc">&nbsp;        Cart cart = item.getCart();</b>
+<b class="nc">&nbsp;        cartItemRepository.delete(item);</b>
+<b class="nc">&nbsp;        updateCartTotal(cart);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(Map.of(&quot;message&quot;, &quot;Item removed from cart&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @DeleteMapping(&quot;/clear&quot;)
+&nbsp;    public ResponseEntity&lt;?&gt; clearCart(Authentication auth) {
+<b class="nc">&nbsp;        User user = userRepository.findByEmail(auth.getName()).orElse(null);</b>
+<b class="nc">&nbsp;        Cart cart = cartRepository.findByUser(user).orElse(null);</b>
+<b class="nc">&nbsp;        if (cart == null) return ResponseEntity.notFound().build();</b>
+&nbsp;
+<b class="nc">&nbsp;        cartItemRepository.deleteAll(cart.getCartItems());</b>
+<b class="nc">&nbsp;        cart.setTotalAmount(0.0);</b>
+<b class="nc">&nbsp;        cartRepository.save(cart);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(Map.of(&quot;message&quot;, &quot;Cart cleared&quot;));</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-31 03:00</div>
+</div>
+</body>
+</html>

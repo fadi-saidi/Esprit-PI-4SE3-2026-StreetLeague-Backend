@@ -1,0 +1,124 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > IHealthService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">tn.esprit.pi.service.health</a>
+</div>
+
+<h1>Coverage Summary for Class: IHealthService (tn.esprit.pi.service.health)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">IHealthService$MockitoMock$NU0aBjXo</td>
+  </tr>
+  <tr>
+    <td class="name">IHealthService$MockitoMock$NU0aBjXo$auxiliary$5mxwJ8Ck</td>
+  </tr>
+  <tr>
+    <td class="name">IHealthService$MockitoMock$NU0aBjXo$auxiliary$ltLO6wTO</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package tn.esprit.pi.service.health;
+&nbsp;
+&nbsp;import tn.esprit.pi.domain.InjurySeverity;
+&nbsp;import tn.esprit.pi.dto.Dtos.InjuryDTO;
+&nbsp;import tn.esprit.pi.dto.Dtos.MedicalRecordDTO;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;public interface IHealthService {
+&nbsp;
+&nbsp;    MedicalRecordDTO createRecord(MedicalRecordDTO dto);
+&nbsp;
+&nbsp;    // Player or healthProfessionnal updates
+&nbsp;    MedicalRecordDTO updateRecord(Long id, MedicalRecordDTO dto);
+&nbsp;
+&nbsp;    // Admin deletes a medical record
+&nbsp;    void deleteRecord(Long id);
+&nbsp;
+&nbsp;    // Get a record by its own ID
+&nbsp;    MedicalRecordDTO getRecordById(Long id);
+&nbsp;
+&nbsp;    // Get a player&#39;s record using their player profile ID — used by coach/doctor
+&nbsp;    MedicalRecordDTO getRecordByPlayer(Long playerProfileId);
+&nbsp;
+&nbsp;    // Player declares a new injury
+&nbsp;    InjuryDTO declareInjury(InjuryDTO dto);
+&nbsp;
+&nbsp;    // Health professional adds medical advice to an injury (backlog #30)
+&nbsp;    InjuryDTO addRecommendation(Long injuryId, String recommendation);
+&nbsp;
+&nbsp;    // Delete an injury record
+&nbsp;    void deleteInjury(Long id);
+&nbsp;
+&nbsp;    // Get all injuries of a player&#39;s medical record — used by coach (backlog #32)
+&nbsp;    List&lt;InjuryDTO&gt; getInjuriesByRecord(Long medicalRecordId);
+&nbsp;
+&nbsp;    // Filter injuries by severity: MINOR, MODERATE, SEVERE (backlog #34)
+&nbsp;    List&lt;InjuryDTO&gt; filterBySeverity(Long medicalRecordId, InjurySeverity severity);
+&nbsp;
+&nbsp;    // Get a single injury by ID
+&nbsp;    InjuryDTO getInjuryById(Long id);
+&nbsp;
+&nbsp;    // Get ALL injuries across all players — used by health professional dashboard
+&nbsp;    List&lt;InjuryDTO&gt; getAllInjuries();
+&nbsp;
+&nbsp;    List&lt;MedicalRecordDTO&gt; getAllRecords();
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-31 03:00</div>
+</div>
+</body>
+</html>

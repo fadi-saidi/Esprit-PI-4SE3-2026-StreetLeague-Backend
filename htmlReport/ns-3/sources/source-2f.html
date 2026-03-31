@@ -1,0 +1,114 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Wallet</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">tn.esprit.pi.domain</a>
+</div>
+
+<h1>Coverage Summary for Class: Wallet (tn.esprit.pi.domain)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">Wallet$HibernateInstantiator$7J6fZKUw</td>
+  </tr>
+  <tr>
+    <td class="name">Wallet$HibernateInstantiator$cue6jd9M</td>
+  </tr>
+  <tr>
+    <td class="name">Wallet$HibernateInstantiator$sUjVlxBY</td>
+  </tr>
+  <tr>
+    <td class="name">Wallet$HibernateProxy$1yAMcMJC</td>
+  </tr>
+  <tr>
+    <td class="name">Wallet$HibernateProxy$FzzyDOGk</td>
+  </tr>
+  <tr>
+    <td class="name">Wallet$HibernateProxy$nOeAPyZE</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package tn.esprit.pi.domain;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+&nbsp;import jakarta.persistence.*;
+&nbsp;import lombok.*;
+&nbsp;
+&nbsp;@Entity
+&nbsp;@Getter
+&nbsp;@Setter
+&nbsp;@NoArgsConstructor
+&nbsp;@AllArgsConstructor
+&nbsp;@Builder
+&nbsp;public class Wallet {
+&nbsp;
+&nbsp;    @Id
+&nbsp;    @GeneratedValue(strategy = GenerationType.IDENTITY)
+&nbsp;    private Long id;
+&nbsp;
+&nbsp;    private int points;
+&nbsp;
+&nbsp;    @OneToOne
+&nbsp;    @JoinColumn(name = &quot;user_id&quot;, unique = true)
+&nbsp;    @JsonIgnoreProperties({&quot;wallet&quot;, &quot;password&quot;, &quot;enabled&quot;, &quot;authorities&quot;,
+&nbsp;            &quot;accountNonExpired&quot;, &quot;accountNonLocked&quot;, &quot;credentialsNonExpired&quot;,
+&nbsp;            &quot;adminProfile&quot;, &quot;coachProfile&quot;, &quot;healthProfessionalProfile&quot;,
+&nbsp;            &quot;playerProfile&quot;, &quot;refereeProfile&quot;, &quot;sponsorProfile&quot;, &quot;venueOwnerProfile&quot;})
+&nbsp;    private User user;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-31 03:00</div>
+</div>
+</body>
+</html>

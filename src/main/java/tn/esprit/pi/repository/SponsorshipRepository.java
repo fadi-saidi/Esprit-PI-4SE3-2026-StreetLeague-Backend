@@ -13,6 +13,7 @@ public interface SponsorshipRepository extends JpaRepository<Sponsorship, Long> 
     List<Sponsorship> findByStatus(SponsorshipStatus status);
     List<Sponsorship> findByTeamId(Long teamId);
     List<Sponsorship> findByEventId(Long eventId);
+    List<Sponsorship> findByTournamentId(Long tournamentId);
     List<Sponsorship> findByVenueId(Long venueId);
     
     @Query("SELECT COUNT(s), SUM(s.amount) FROM Sponsorship s WHERE s.status = :status AND s.startDate >= :startDate")

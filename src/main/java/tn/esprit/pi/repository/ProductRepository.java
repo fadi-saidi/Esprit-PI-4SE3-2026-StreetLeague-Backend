@@ -16,6 +16,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findBySportType(SportType sportType);
     List<Product> findByPriceBetween(Double minPrice, Double maxPrice);
 
+    @Query("SELECT p FROM Product p WHERE p.shop.id = :shopId")
+    List<Product> findByShopId(@Param("shopId") Long shopId);
+
     @Query("SELECT p FROM Product p WHERE " +
            "(:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
            "(:category IS NULL OR p.category = :category) AND " +

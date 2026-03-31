@@ -1,0 +1,233 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserProfileHelper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">tn.esprit.pi.util</a>
+</div>
+
+<h1>Coverage Summary for Class: UserProfileHelper (tn.esprit.pi.util)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UserProfileHelper</td>
+<td class="coverageStat">
+  <span class="percent">
+    71.4%
+  </span>
+  <span class="absValue">
+    (5/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    44.4%
+  </span>
+  <span class="absValue">
+    (4/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (7/14)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">UserProfileHelper$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (6/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    44.4%
+  </span>
+  <span class="absValue">
+    (4/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    53.3%
+  </span>
+  <span class="absValue">
+    (8/15)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package tn.esprit.pi.util;
+&nbsp;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.stereotype.Component;
+&nbsp;import tn.esprit.pi.domain.*;
+&nbsp;import tn.esprit.pi.repository.*;
+&nbsp;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;/**
+&nbsp; * Helper utility for working with User and Profile entities
+&nbsp; * Simplifies common operations after migration to single user table
+&nbsp; */
+&nbsp;@Component
+<b class="fc">&nbsp;public class UserProfileHelper {</b>
+&nbsp;    
+&nbsp;    @Autowired
+&nbsp;    private UserRepository userRepository;
+&nbsp;    @Autowired
+&nbsp;    private CoachProfileRepository coachProfileRepository;
+&nbsp;    @Autowired
+&nbsp;    private PlayerProfileRepository playerProfileRepository;
+&nbsp;    @Autowired
+&nbsp;    private RefereeProfileRepository refereeProfileRepository;
+&nbsp;    @Autowired
+&nbsp;    private HealthProfessionalProfileRepository healthProfessionalProfileRepository;
+&nbsp;    @Autowired
+&nbsp;    private SponsorProfileRepository sponsorProfileRepository;
+&nbsp;    @Autowired
+&nbsp;    private VenueOwnerProfileRepository venueOwnerProfileRepository;
+&nbsp;    @Autowired
+&nbsp;    private AdminProfileRepository adminProfileRepository;
+&nbsp;    
+&nbsp;    /**
+&nbsp;     * Get profile for a user based on their role
+&nbsp;     */
+&nbsp;    public Object getProfileByUser(User user) {
+<b class="pc">&nbsp;        return switch (user.getRole()) {</b>
+<b class="fc">&nbsp;            case COACH -&gt; coachProfileRepository.findByUserId(user.getId()).orElse(null);</b>
+<b class="fc">&nbsp;            case PLAYER -&gt; playerProfileRepository.findByUserId(user.getId()).orElse(null);</b>
+<b class="nc">&nbsp;            case REFEREE -&gt; refereeProfileRepository.findByUserId(user.getId()).orElse(null);</b>
+<b class="nc">&nbsp;            case HEALTH_PROFESSIONAL -&gt; healthProfessionalProfileRepository.findByUserId(user.getId()).orElse(null);</b>
+<b class="nc">&nbsp;            case SPONSOR -&gt; sponsorProfileRepository.findByUserId(user.getId()).orElse(null);</b>
+<b class="nc">&nbsp;            case VENUE_OWNER -&gt; venueOwnerProfileRepository.findByUserId(user.getId()).orElse(null);</b>
+<b class="nc">&nbsp;            case ADMIN -&gt; adminProfileRepository.findByUserId(user.getId()).orElse(null);</b>
+&nbsp;        };
+&nbsp;    }
+&nbsp;    
+&nbsp;    /**
+&nbsp;     * Get CoachProfile by user ID
+&nbsp;     */
+&nbsp;    public Optional&lt;CoachProfile&gt; getCoachProfile(Long userId) {
+<b class="nc">&nbsp;        return coachProfileRepository.findByUserId(userId);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    /**
+&nbsp;     * Get PlayerProfile by user ID
+&nbsp;     */
+&nbsp;    public Optional&lt;PlayerProfile&gt; getPlayerProfile(Long userId) {
+<b class="fc">&nbsp;        return playerProfileRepository.findByUserId(userId);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    /**
+&nbsp;     * Get RefereeProfile by user ID
+&nbsp;     */
+&nbsp;    public Optional&lt;RefereeProfile&gt; getRefereeProfile(Long userId) {
+<b class="nc">&nbsp;        return refereeProfileRepository.findByUserId(userId);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    /**
+&nbsp;     * Check if user has a specific role
+&nbsp;     */
+&nbsp;    public boolean hasRole(User user, Role role) {
+<b class="fc">&nbsp;        return user.getRole() == role;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    /**
+&nbsp;     * Get user by email
+&nbsp;     */
+&nbsp;    public Optional&lt;User&gt; getUserByEmail(String email) {
+<b class="fc">&nbsp;        return userRepository.findByEmail(email);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-31 03:00</div>
+</div>
+</body>
+</html>
