@@ -48,3 +48,10 @@ Thumbs.db
 # Application specific
 uploads/
 logs/
+
+# Local helper scripts and run artifacts
+*.bat
+backend-live.out
+backend-live.err
+.run-logs/
+htmlReport/

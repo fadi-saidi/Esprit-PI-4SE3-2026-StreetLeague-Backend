@@ -9,7 +9,7 @@ import tn.esprit.pi.dto.Dtos.RegisterRequest;
 import tn.esprit.pi.service.IAuthService;
 
 @RestController
-@CrossOrigin("*")
+@CrossOrigin(origins = {"http://localhost:4200", "http://127.0.0.1:4200"})
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {

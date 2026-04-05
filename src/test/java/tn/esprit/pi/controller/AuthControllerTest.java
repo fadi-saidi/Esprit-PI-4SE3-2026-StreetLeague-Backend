@@ -20,22 +20,28 @@ import tn.esprit.pi.dto.Dtos.RegisterRequest;
 import tn.esprit.pi.service.IAuthService;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests - AuthController")
 class AuthControllerTest {
 
-    @Mock private IAuthService authService;
-    @Mock private Authentication authentication;
-    @InjectMocks private AuthController authController;
+    @Mock
+    private IAuthService authService;
+
+    @Mock
+    private Authentication authentication;
+
+    @InjectMocks
+    private AuthController authController;
 
     private MockMvc mockMvc;
 
@@ -45,9 +51,8 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("Register - Succès")
+    @DisplayName("Register - Success")
     void register_Success() throws Exception {
-        // Correction ici : On remplit le record avec les 14 paramètres (null ou valeurs par défaut pour le test)
         RegisterRequest req = new RegisterRequest(
                 "test@test.com", "password", "testuser", Role.PLAYER,
                 null, null, null, null, null, null, null, null, null, null
@@ -56,50 +61,51 @@ class AuthControllerTest {
         User mockUser = new User();
         mockUser.setEmail("test@test.com");
 
-        // Dans votre controller : var saved = authService.register(req);
-        // L'erreur indiquait qu'il attend un User en retour
         when(authService.register(any(RegisterRequest.class))).thenReturn(mockUser);
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"test@test.com\",\"username\":\"testuser\",\"password\":\"password\"}"))
+                        .content("""
+                                {"email":"test@test.com","username":"testuser","password":"password"}
+                                """))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("User created: test@test.com")));
     }
 
     @Test
-    @DisplayName("Login - Succès")
+    @DisplayName("Login - Success")
     void login_Success() throws Exception {
-        // Correction : AuthResponse attend 4 paramètres (String, String, String, Long)
-        AuthResponse res = new AuthResponse("token-secret", "test@test.com", "PLAYER", 1L);
+        AuthResponse res = new AuthResponse(1L, "token-secret", "test@test.com", "PLAYER", 10L);
 
         when(authService.login(any(LoginRequest.class))).thenReturn(res);
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"test@test.com\",\"password\":\"password\"}"))
+                        .content("""
+                                {"email":"test@test.com","password":"password"}
+                                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").value("token-secret"));
     }
 
     @Test
-    @DisplayName("Login - Échec (401)")
+    @DisplayName("Login - Failure")
     void login_Failure() throws Exception {
         when(authService.login(any())).thenThrow(new RuntimeException("Invalid credentials"));
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"wrong@test.com\",\"password\":\"pwd\"}"))
+                        .content("""
+                                {"email":"wrong@test.com","password":"pwd"}
+                                """))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Me - Récupérer profil connecté")
+    @DisplayName("Me - Get current profile")
     void me_Success() throws Exception {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("user@test.com");
-
-        // Utilisation de doReturn pour éviter les problèmes de types avec getAuthorities()
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_PLAYER")))
                 .when(authentication).getAuthorities();
 
