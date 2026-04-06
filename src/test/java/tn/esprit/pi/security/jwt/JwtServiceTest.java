@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import tn.esprit.pi.security.JwtService;
 
 import java.util.Collections;
 
