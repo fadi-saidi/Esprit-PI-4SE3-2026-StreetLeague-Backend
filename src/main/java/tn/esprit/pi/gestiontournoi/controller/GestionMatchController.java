@@ -2,11 +2,15 @@ package tn.esprit.pi.gestiontournoi.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.pi.gestiontournoi.entity.GestionMatch;
-import tn.esprit.pi.gestiontournoi.repository.GestionMatchRepository;
+import tn.esprit.pi.gestiontournoi.dto.GestionDtos.DecisionRequest;
+import tn.esprit.pi.gestiontournoi.dto.GestionDtos.MatchLookupResponse;
+import tn.esprit.pi.gestiontournoi.dto.GestionDtos.MatchRequest;
+import tn.esprit.pi.gestiontournoi.dto.GestionDtos.MatchResponse;
+import tn.esprit.pi.gestiontournoi.service.GestionMatchService;
 
 import java.util.List;
 
@@ -16,37 +20,53 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GestionMatchController {
 
-    private final GestionMatchRepository repository;
+    private final GestionMatchService service;
 
     @GetMapping
-    public List<GestionMatch> getAll() {
-        return repository.findAll(Sort.by(Sort.Direction.DESC, "id"));
+    public List<MatchResponse> getAll(Authentication authentication) {
+        return service.getApproved(authentication);
     }
 
     @PostMapping
-    public GestionMatch create(@Valid @RequestBody GestionMatch request) {
-        request.setId(null);
-        return repository.save(request);
+    @PreAuthorize("isAuthenticated()")
+    public MatchResponse create(@Valid @RequestBody MatchRequest request, Authentication authentication) {
+        return service.submit(request, authentication);
+    }
+
+    @GetMapping("/requests")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<MatchResponse> getRequests(Authentication authentication) {
+        return service.getRequests(authentication);
+    }
+
+    @GetMapping("/lookups")
+    @PreAuthorize("isAuthenticated()")
+    public MatchLookupResponse getLookups(Authentication authentication) {
+        return service.getLookups(authentication);
     }
 
     @PutMapping("/{id}")
-    public GestionMatch update(@PathVariable Long id, @Valid @RequestBody GestionMatch request) {
-        GestionMatch existing = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
-        existing.setHomeTeam(request.getHomeTeam());
-        existing.setAwayTeam(request.getAwayTeam());
-        existing.setDate(request.getDate());
-        existing.setScore(request.getScore());
-        existing.setLocation(request.getLocation());
-        return repository.save(existing);
+    @PreAuthorize("hasRole('ADMIN')")
+    public MatchResponse update(@PathVariable Long id, @Valid @RequestBody MatchRequest request, Authentication authentication) {
+        return service.update(id, request, authentication);
+    }
+
+    @PostMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public MatchResponse approve(@PathVariable Long id, @RequestBody(required = false) DecisionRequest request, Authentication authentication) {
+        return service.approve(id, request, authentication);
+    }
+
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public MatchResponse reject(@PathVariable Long id, @RequestBody(required = false) DecisionRequest request, Authentication authentication) {
+        return service.reject(id, request, authentication);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
-            throw new IllegalArgumentException("Match not found");
-        }
-        repository.deleteById(id);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long id, Authentication authentication) {
+        service.delete(id, authentication);
         return ResponseEntity.noContent().build();
     }
 }

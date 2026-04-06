@@ -8,28 +8,35 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Sort;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
-import tn.esprit.pi.gestiontournoi.entity.GestionEvent;
-import tn.esprit.pi.gestiontournoi.repository.GestionEventRepository;
+import tn.esprit.pi.gestiontournoi.dto.GestionDtos.EventResponse;
+import tn.esprit.pi.gestiontournoi.dto.GestionDtos.UserSummary;
+import tn.esprit.pi.gestiontournoi.entity.ApprovalStatus;
+import tn.esprit.pi.gestiontournoi.service.GestionEventService;
 import tn.esprit.pi.security.GlobalExceptionHandler;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("GestionEventController")
 class GestionEventControllerTest {
 
     @Mock
-    private GestionEventRepository repository;
+    private GestionEventService service;
 
     @InjectMocks
     private GestionEventController controller;
@@ -48,20 +55,33 @@ class GestionEventControllerTest {
     }
 
     @Test
-    void getAll_returnsEvents() throws Exception {
-        GestionEvent event = new GestionEvent();
-        event.setId(1L);
-        event.setName("Quarter Finals");
-        event.setDescription("Knockout round");
-        event.setDate("2026-04-10");
-        event.setLocation("Main Arena");
-
-        when(repository.findAll(any(Sort.class))).thenReturn(List.of(event));
+    void getAll_returnsApprovedEvents() throws Exception {
+        when(service.getApproved(any())).thenReturn(List.of(eventResponse(1L, ApprovalStatus.APPROVED, false)));
 
         mockMvc.perform(get("/api/events"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("Quarter Finals"));
+                .andExpect(jsonPath("$[0].approvalStatus").value("APPROVED"))
+                .andExpect(jsonPath("$[0].participantCount").value(5));
+    }
+
+    @Test
+    void create_withValidBody_returnsCreatedRequest() throws Exception {
+        when(service.submit(any(), any())).thenReturn(eventResponse(2L, ApprovalStatus.PENDING, false));
+
+        mockMvc.perform(post("/api/events")
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "name": "Opening Day",
+                                  "description": "desc",
+                                  "date": "2026-04-10",
+                                  "location": "Arena"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(2))
+                .andExpect(jsonPath("$.approvalStatus").value("PENDING"));
     }
 
     @Test
@@ -84,42 +104,73 @@ class GestionEventControllerTest {
     }
 
     @Test
-    void update_existingEvent_returnsUpdatedEvent() throws Exception {
-        GestionEvent existing = new GestionEvent();
-        existing.setId(7L);
-        existing.setName("Old Name");
-        existing.setDescription("Old");
-        existing.setDate("2026-04-01");
-        existing.setLocation("Old Place");
+    void getRequests_update_approve_reject_andParticipation_routes_delegateCorrectly() throws Exception {
+        when(service.getRequests(any())).thenReturn(List.of(eventResponse(3L, ApprovalStatus.PENDING, false)));
+        when(service.update(eq(3L), any(), any())).thenReturn(eventResponse(3L, ApprovalStatus.APPROVED, false));
+        when(service.approve(eq(3L), any(), any())).thenReturn(eventResponse(3L, ApprovalStatus.APPROVED, false));
+        when(service.reject(eq(3L), any(), any())).thenReturn(eventResponse(3L, ApprovalStatus.REJECTED, false));
+        when(service.participate(eq(3L), any())).thenReturn(eventResponse(3L, ApprovalStatus.APPROVED, true));
+        when(service.cancelParticipation(eq(3L), any())).thenReturn(eventResponse(3L, ApprovalStatus.APPROVED, false));
 
-        when(repository.findById(7L)).thenReturn(Optional.of(existing));
-        when(repository.save(any(GestionEvent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        mockMvc.perform(get("/api/events/requests"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].approvalStatus").value("PENDING"));
 
-        mockMvc.perform(put("/api/events/7")
+        mockMvc.perform(put("/api/events/3")
                         .contentType("application/json")
                         .content("""
                                 {
-                                  "name": "New Name",
-                                  "description": "Updated",
-                                  "date": "2026-04-12",
-                                  "location": "New Place"
+                                  "name": "Updated Event",
+                                  "description": "desc",
+                                  "date": "2026-04-11",
+                                  "location": "Arena"
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(7))
-                .andExpect(jsonPath("$.name").value("New Name"))
-                .andExpect(jsonPath("$.location").value("New Place"));
+                .andExpect(jsonPath("$.approvalStatus").value("APPROVED"));
 
-        verify(repository).save(existing);
+        mockMvc.perform(post("/api/events/3/approve")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("note", "Looks good"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.approvedBy.name").value("admin"));
+
+        mockMvc.perform(post("/api/events/3/reject")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("note", "Rejected"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.approvalStatus").value("REJECTED"));
+
+        mockMvc.perform(post("/api/events/3/participate"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.participating").value(true));
+
+        mockMvc.perform(delete("/api/events/3/participate"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.participating").value(false));
     }
 
     @Test
     void delete_existingEvent_returnsNoContent() throws Exception {
-        when(repository.existsById(9L)).thenReturn(true);
-
         mockMvc.perform(delete("/api/events/9"))
                 .andExpect(status().isNoContent());
 
-        verify(repository).deleteById(9L);
+        verify(service).delete(eq(9L), any());
+    }
+
+    private EventResponse eventResponse(Long id, ApprovalStatus status, boolean participating) {
+        return new EventResponse(
+                id,
+                "Opening Day",
+                "Updated",
+                "2026-04-12",
+                "New Place",
+                status,
+                new UserSummary(5L, "requester", "requester@test.com", "PLAYER"),
+                new UserSummary(1L, "admin", "admin@test.com", "ADMIN"),
+                "Looks good",
+                5,
+                participating
+        );
     }
 }

@@ -2,11 +2,14 @@ package tn.esprit.pi.gestiontournoi.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.pi.gestiontournoi.entity.GestionEvent;
-import tn.esprit.pi.gestiontournoi.repository.GestionEventRepository;
+import tn.esprit.pi.gestiontournoi.dto.GestionDtos.DecisionRequest;
+import tn.esprit.pi.gestiontournoi.dto.GestionDtos.EventRequest;
+import tn.esprit.pi.gestiontournoi.dto.GestionDtos.EventResponse;
+import tn.esprit.pi.gestiontournoi.service.GestionEventService;
 
 import java.util.List;
 
@@ -16,36 +19,59 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GestionEventController {
 
-    private final GestionEventRepository repository;
+    private final GestionEventService service;
 
     @GetMapping
-    public List<GestionEvent> getAll() {
-        return repository.findAll(Sort.by(Sort.Direction.DESC, "id"));
+    public List<EventResponse> getAll(Authentication authentication) {
+        return service.getApproved(authentication);
     }
 
     @PostMapping
-    public GestionEvent create(@Valid @RequestBody GestionEvent request) {
-        request.setId(null);
-        return repository.save(request);
+    @PreAuthorize("isAuthenticated()")
+    public EventResponse create(@Valid @RequestBody EventRequest request, Authentication authentication) {
+        return service.submit(request, authentication);
+    }
+
+    @GetMapping("/requests")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<EventResponse> getRequests(Authentication authentication) {
+        return service.getRequests(authentication);
     }
 
     @PutMapping("/{id}")
-    public GestionEvent update(@PathVariable Long id, @Valid @RequestBody GestionEvent request) {
-        GestionEvent existing = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Event not found"));
-        existing.setName(request.getName());
-        existing.setDescription(request.getDescription());
-        existing.setDate(request.getDate());
-        existing.setLocation(request.getLocation());
-        return repository.save(existing);
+    @PreAuthorize("hasRole('ADMIN')")
+    public EventResponse update(@PathVariable Long id, @Valid @RequestBody EventRequest request, Authentication authentication) {
+        return service.update(id, request, authentication);
+    }
+
+    @PostMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public EventResponse approve(@PathVariable Long id, @RequestBody(required = false) DecisionRequest request, Authentication authentication) {
+        return service.approve(id, request, authentication);
+    }
+
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public EventResponse reject(@PathVariable Long id, @RequestBody(required = false) DecisionRequest request, Authentication authentication) {
+        return service.reject(id, request, authentication);
+    }
+
+    @PostMapping("/{id}/participate")
+    @PreAuthorize("isAuthenticated()")
+    public EventResponse participate(@PathVariable Long id, Authentication authentication) {
+        return service.participate(id, authentication);
+    }
+
+    @DeleteMapping("/{id}/participate")
+    @PreAuthorize("isAuthenticated()")
+    public EventResponse cancelParticipation(@PathVariable Long id, Authentication authentication) {
+        return service.cancelParticipation(id, authentication);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
-            throw new IllegalArgumentException("Event not found");
-        }
-        repository.deleteById(id);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long id, Authentication authentication) {
+        service.delete(id, authentication);
         return ResponseEntity.noContent().build();
     }
 }
