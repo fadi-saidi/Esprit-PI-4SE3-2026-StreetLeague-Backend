@@ -20,6 +20,9 @@ public class Post {
     private String content;
     private LocalDateTime creationDate;
 
+    private boolean flagged = false;
+    private String flagReason;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonIgnoreProperties({

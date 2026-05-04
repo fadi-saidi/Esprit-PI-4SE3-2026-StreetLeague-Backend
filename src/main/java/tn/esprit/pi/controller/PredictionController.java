@@ -2,6 +2,8 @@ package tn.esprit.pi.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.pi.dto.FantasyStatsDto;
+import tn.esprit.pi.dto.LeaderboardEntryDto;
 import tn.esprit.pi.dto.PlayerStatDto;
 import tn.esprit.pi.dto.PredictionDto;
 import tn.esprit.pi.dto.PredictionResponse;
@@ -19,37 +21,31 @@ public class PredictionController {
 
     // User soumet sa prediction pour la semaine courante
     @PostMapping("/submit")
-    public PredictionResponse submit(@RequestBody PredictionDto request) {
-        return predictionService.submitPrediction(request);
+    public PredictionResponse submitPrediction(@RequestBody PredictionDto predictionDto) {
+        return predictionService.submitPrediction(predictionDto);
     }
 
-    // Prediction courante d'une virtual team
-    @GetMapping("/current/{virtualTeamId}")
-    public Optional<PredictionResponse> getCurrent(@PathVariable Long virtualTeamId) {
-        return predictionService.getCurrentPrediction(virtualTeamId);
-    }
-
-    // Historique complet d'une virtual team
-    @GetMapping("/history/{virtualTeamId}")
-    public List<PredictionResponse> getHistory(@PathVariable Long virtualTeamId) {
-        return predictionService.getPredictionHistory(virtualTeamId);
-    }
-
-    // Admin : enregistrer les stats d'un joueur après le match
-    @PostMapping("/admin/stats")
-    public void saveStats(@RequestBody PlayerStatDto dto) {
-        predictionService.savePlayerStat(dto);
-    }
-
-    // Admin : lister toutes les predictions en attente
-    @GetMapping("/admin/pending")
-    public List<PredictionResponse> getAllPending() {
-        return predictionService.getAllPendingPredictions();
+    // Get all predictions
+    @GetMapping("/all")
+    public List<PredictionResponse> getAllPredictions() {
+        return predictionService.getAllPredictions();
     }
 
     // Admin : résoudre manuellement une prediction
     @PostMapping("/admin/resolve/{predictionId}")
     public PredictionResponse resolve(@PathVariable Long predictionId) {
         return predictionService.resolvePredictionById(predictionId);
+    }
+
+    // Admin : aggregated stats for current week dashboard
+    @GetMapping("/admin/stats")
+    public FantasyStatsDto getAdminStats() {
+        return predictionService.getAdminStats();
+    }
+
+    // Leaderboard: all users ranked by wallet points
+    @GetMapping("/admin/leaderboard")
+    public List<LeaderboardEntryDto> getLeaderboard() {
+        return predictionService.getLeaderboard();
     }
 }

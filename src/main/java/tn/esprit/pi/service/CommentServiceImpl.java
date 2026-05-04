@@ -15,6 +15,7 @@ public class CommentServiceImpl implements ICommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final BadWordsService badWordsService;
 
     @Override
     public Comment createComment(Long postId, Long userId, String content) {
@@ -26,9 +27,13 @@ public class CommentServiceImpl implements ICommentService {
         Comment comment = new Comment();
         comment.setContent(content);
 
-        //  DOUBLE affectation
-        post.addComment(comment);   // FK post_id remplie
-        user.addComment(comment);   // FK user_id remplie
+        if (badWordsService.containsBadWords(content)) {
+            comment.setFlagged(true);
+            comment.setFlagReason("bad_words");
+        }
+
+        post.addComment(comment);
+        user.addComment(comment);
 
         return commentRepository.save(comment);
     }
@@ -48,12 +53,12 @@ public class CommentServiceImpl implements ICommentService {
         reply.setContent(content);
         reply.setUser(user);
 
-        //  4 — PARENT (Comment) affecte l'enfant (Reply)
-        // parentComment.addReply() fait :
-        //   reply.setParentComment(this)  → FK parent_comment_id remplie
-        //   reply.setPost(this.post)      → FK post_id remplie aussi
-        parentComment.addReply(reply);
+        if (badWordsService.containsBadWords(content)) {
+            reply.setFlagged(true);
+            reply.setFlagReason("bad_words");
+        }
 
+        parentComment.addReply(reply);
         return commentRepository.save(reply);
     }
 
@@ -92,5 +97,28 @@ public class CommentServiceImpl implements ICommentService {
     @Override
     public List<Comment> getRepliesByCommentId(Long commentId) {
         return commentRepository.findByParentCommentId(commentId);
+    }
+
+    // ── Moderation ────────────────────────────────────────────────────────────
+    @Override
+    public List<Comment> getFlaggedComments() {
+        return commentRepository.findByFlaggedTrue();
+    }
+
+    @Override
+    public Comment approveComment(Long id) {
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Comment not found: " + id));
+        comment.setFlagged(false);
+        comment.setFlagReason(null);
+        return commentRepository.save(comment);
+    }
+
+    @Override
+    public void rejectComment(Long id) {
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Comment not found: " + id));
+        comment.getPost().removeComment(comment);
+        commentRepository.delete(comment);
     }
 }

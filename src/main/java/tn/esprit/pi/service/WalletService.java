@@ -122,6 +122,37 @@ public class WalletService {
     }
 
     /**
+     * Apply fantasy game result to user's wallet after prediction resolution.
+     * Positive points → credited. Negative points → deducted (floor at 0).
+     * Zero → no transaction recorded.
+     */
+    public void creditFantasyPoints(User user, int points) {
+        if (points == 0) return;
+        Wallet wallet = getOrCreateWallet(user);
+
+        if (points > 0) {
+            wallet.setPoints(wallet.getPoints() + points);
+        } else {
+            // Deduct but never go below 0
+            int deduct = Math.min(Math.abs(points), wallet.getPoints());
+            wallet.setPoints(wallet.getPoints() - deduct);
+        }
+        walletRepository.save(wallet);
+
+        Transaction transaction = Transaction.builder()
+                .user(user)
+                .amount((double) points)
+                .earnedPoints(points)
+                .type(points > 0 ? TransactionType.DEPOSIT : TransactionType.WITHDRAWAL)
+                .description(points > 0
+                        ? "Fantasy reward: +" + points + " pts"
+                        : "Fantasy penalty: " + points + " pts")
+                .date(LocalDateTime.now())
+                .build();
+        transactionRepository.save(transaction);
+    }
+
+    /**
      * Get wallet balance for user
      */
     public int getWalletPoints(User user) {

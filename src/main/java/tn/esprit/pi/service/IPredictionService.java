@@ -1,5 +1,7 @@
 package tn.esprit.pi.service;
 
+import tn.esprit.pi.dto.FantasyStatsDto;
+import tn.esprit.pi.dto.LeaderboardEntryDto;
 import tn.esprit.pi.dto.PlayerStatDto;
 import tn.esprit.pi.dto.PredictionDto;
 import tn.esprit.pi.dto.PredictionResponse;
@@ -22,4 +24,15 @@ public interface IPredictionService {
     PredictionResponse resolvePredictionById(Long predictionId);
 
     List<PredictionResponse> getAllPendingPredictions();
+
+    List<PredictionResponse> getAllPredictions();
+
+    /** Resolve all PENDING predictions for a given week — called after match results are submitted */
+    List<PredictionResponse> resolveWeekPredictions(int weekNumber, int weekYear);
+
+    /** Admin dashboard: aggregated stats for current week */
+    FantasyStatsDto getAdminStats();
+
+    /** Leaderboard: all users ranked by wallet points */
+    List<LeaderboardEntryDto> getLeaderboard();
 }

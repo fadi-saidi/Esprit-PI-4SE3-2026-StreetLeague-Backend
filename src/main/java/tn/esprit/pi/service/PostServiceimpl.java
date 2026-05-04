@@ -18,6 +18,7 @@ public class PostServiceimpl implements IPostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final BadWordsService badWordsService;
 
     @Override
     public PostDto createPost(Long userId, String content) {
@@ -26,15 +27,22 @@ public class PostServiceimpl implements IPostService {
 
         Post post = new Post();
         post.setContent(content);
-        user.addPost(post);
 
+        if (badWordsService.containsBadWords(content)) {
+            post.setFlagged(true);
+            post.setFlagReason("bad_words");
+        }
+
+        user.addPost(post);
         return toDto(postRepository.save(post));
     }
 
     @Override
     public List<PostDto> getAllPosts() {
+        // Public feed: hide flagged posts (pending admin review)
         return postRepository.findAll()
                 .stream()
+                .filter(p -> !p.isFlagged())
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -50,6 +58,13 @@ public class PostServiceimpl implements IPostService {
         Post existing = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found: " + id));
         existing.setContent(newContent);
+        if (badWordsService.containsBadWords(newContent)) {
+            existing.setFlagged(true);
+            existing.setFlagReason("bad_words");
+        } else {
+            existing.setFlagged(false);
+            existing.setFlagReason(null);
+        }
         return toDto(postRepository.save(existing));
     }
 
@@ -66,7 +81,28 @@ public class PostServiceimpl implements IPostService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ mapper privé
+    // ── Moderation ────────────────────────────────────────────────────────────
+    @Override
+    public List<PostDto> getFlaggedPosts() {
+        return postRepository.findByFlaggedTrue()
+                .stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    @Override
+    public PostDto approvePost(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Post not found: " + id));
+        post.setFlagged(false);
+        post.setFlagReason(null);
+        return toDto(postRepository.save(post));
+    }
+
+    @Override
+    public void rejectPost(Long id) {
+        postRepository.deleteById(id);
+    }
+
+    // ── Mapper ────────────────────────────────────────────────────────────────
     private PostDto toDto(Post post) {
         PostDto dto = new PostDto();
         dto.setId(post.getId());
@@ -74,6 +110,8 @@ public class PostServiceimpl implements IPostService {
         dto.setCreationDate(post.getCreationDate());
         dto.setUserId(post.getUser().getId());
         dto.setUsername(post.getUser().getUsername());
+        dto.setFlagged(post.isFlagged());
+        dto.setFlagReason(post.getFlagReason());
         return dto;
     }
 }

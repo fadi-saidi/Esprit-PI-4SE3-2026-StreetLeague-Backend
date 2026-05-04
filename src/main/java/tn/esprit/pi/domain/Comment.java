@@ -18,6 +18,9 @@ public class Comment {
     
     private String content;
     private LocalDateTime creationDate;
+
+    private boolean flagged = false;
+    private String flagReason;
     @PrePersist
     public void onCreate() {
         this.creationDate = LocalDateTime.now();

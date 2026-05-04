@@ -7,6 +7,6 @@ import tn.esprit.pi.domain.Post;
 import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
-    // Optional: find posts by user
     List<Post> findByUserId(Long userId);
+    List<Post> findByFlaggedTrue();
 }

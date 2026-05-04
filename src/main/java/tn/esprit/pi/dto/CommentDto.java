@@ -14,4 +14,6 @@ public class CommentDto {
     private Long postId;
     private Long parentCommentId;
     private List<CommentDto> replies;
+    private boolean flagged;
+    private String flagReason;
 }

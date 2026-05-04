@@ -10,4 +10,6 @@ public class PostDto {
     private LocalDateTime creationDate;
     private Long userId;
     private String username;
+    private boolean flagged;
+    private String flagReason;
 }

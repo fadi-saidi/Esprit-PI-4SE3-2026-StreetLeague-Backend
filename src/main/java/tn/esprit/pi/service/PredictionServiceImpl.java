@@ -1,5 +1,6 @@
 package tn.esprit.pi.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class PredictionServiceImpl implements IPredictionService {
     private final PredictionRepository predictionRepository;
     private final PlayerStatRepository playerStatRepository;
     private final VirtualTeamRepository virtualTeamRepository;
+    private final WalletService walletService;
+    private final MatchRepository matchRepository;
+    private final WalletRepository walletRepository;
 
     // ── Submit / update prediction for current week ───────────────────────────
     @Override
@@ -33,8 +37,11 @@ public class PredictionServiceImpl implements IPredictionService {
         VirtualTeam team = virtualTeamRepository.findById(request.getVirtualTeamId())
                 .orElseThrow(() -> new RuntimeException("VirtualTeam not found"));
 
+        // Reuse only if a PENDING prediction exists for this week (user editing before resolution).
+        // If the existing prediction is RESOLVED, always create a fresh record so history is preserved.
         Prediction prediction = predictionRepository
-                .findByVirtualTeamIdAndWeekNumberAndWeekYear(team.getId(), weekNumber, weekYear)
+                .findByVirtualTeamIdAndWeekNumberAndWeekYearAndStatus(
+                        team.getId(), weekNumber, weekYear, PredictionStatus.PENDING)
                 .orElse(Prediction.builder()
                         .virtualTeam(team)
                         .weekNumber(weekNumber)
@@ -45,6 +52,8 @@ public class PredictionServiceImpl implements IPredictionService {
                         .playerPredictions(new ArrayList<>())
                         .build());
 
+        prediction.setTotalPointsEarned(0.0);
+        prediction.setCreatedAt(LocalDate.now());
         prediction.setCaptainPlayerId(request.getCaptainPlayerId());
         prediction.getPlayerPredictions().clear();
 
@@ -66,12 +75,12 @@ public class PredictionServiceImpl implements IPredictionService {
         return toResponse(predictionRepository.save(prediction));
     }
 
-    // ── Get current week prediction for a team ────────────────────────────────
+    // ── Get current week prediction for a team (latest record) ──────────────────
     @Override
     public Optional<PredictionResponse> getCurrentPrediction(Long virtualTeamId) {
         int[] ww = currentWeek();
         return predictionRepository
-                .findByVirtualTeamIdAndWeekNumberAndWeekYear(virtualTeamId, ww[0], ww[1])
+                .findFirstByVirtualTeamIdAndWeekNumberAndWeekYearOrderByIdDesc(virtualTeamId, ww[0], ww[1])
                 .map(this::toResponse);
     }
 
@@ -106,19 +115,65 @@ public class PredictionServiceImpl implements IPredictionService {
     }
 
     // ── Scheduler: every Monday 00:01 → resolve previous week ────────────────
+    @Transactional
     @Override
-    @Scheduled(cron = "0 1 0 * * MON")
+    //@Scheduled(cron = "0 1 0 * * MON")
+    @Scheduled(cron = "0 */2 * * * *")
     public void resolveLastWeekPredictions() {
-        LocalDate lastWeek = LocalDate.now().minusWeeks(1);
+        //LocalDate lastWeek = LocalDate.now().minusWeeks(1);
+        LocalDate lastWeek = LocalDate.now();
         WeekFields wf = WeekFields.of(Locale.getDefault());
         int weekNumber = lastWeek.get(wf.weekOfWeekBasedYear());
         int weekYear   = lastWeek.getYear();
 
+        // ── Step 1: Auto-sync FINISHED match results → PlayerStat ────────────
+        // Reads MatchPlayerStat records from every FINISHED match this week
+        // and upserts them into the PlayerStat table so predictions can be resolved.
+        syncMatchStatsToPlayerStats(weekNumber, weekYear);
+
+        // ── Step 2: Resolve all PENDING predictions for this week ─────────────
         List<Prediction> pending = predictionRepository
                 .findByStatusAndWeekNumberAndWeekYear(PredictionStatus.PENDING, weekNumber, weekYear);
 
         for (Prediction prediction : pending) {
             resolveOnePrediction(prediction);
+        }
+    }
+
+    // ── Sync FINISHED match results into PlayerStat table ─────────────────────
+    // Called by the scheduler before resolving predictions.
+    // For each FINISHED match in the week, upserts a PlayerStat row per player.
+    private void syncMatchStatsToPlayerStats(int weekNumber, int weekYear) {
+        List<Match> finishedMatches = matchRepository
+                .findByStatusAndWeekNumberAndWeekYear(EventStatus.FINISHED, weekNumber, weekYear);
+
+        for (Match match : finishedMatches) {
+            if (match.getPlayerStats() == null || match.getPlayerStats().isEmpty()) continue;
+
+            for (MatchPlayerStat mps : match.getPlayerStats()) {
+                if (mps.getPlayerId() == null) continue;
+
+                // Upsert: if a stat already exists for this player+week, update it.
+                // This handles re-entered match results gracefully.
+                PlayerStat stat = playerStatRepository
+                        .findByPlayerIdAndWeekNumberAndWeekYear(mps.getPlayerId(), weekNumber, weekYear)
+                        .orElse(new PlayerStat());
+
+                stat.setPlayerId(mps.getPlayerId());
+                stat.setPlayerName(mps.getPlayerName());
+                stat.setSportType(mps.getSportType() != null
+                        ? mps.getSportType()
+                        : (match.getSportType() != null ? match.getSportType() : SportType.FOOTBALL));
+                stat.setWeekNumber(weekNumber);
+                stat.setWeekYear(weekYear);
+                stat.setGoalsScored(mps.getGoalsScored());
+                stat.setYellowCards(mps.getYellowCards());
+                stat.setRedCards(mps.getRedCards());
+                stat.setBasketballPoints(mps.getBasketballPoints());
+                stat.setTennisWin(mps.isTennisWin());
+
+                playerStatRepository.save(stat);
+            }
         }
     }
 
@@ -138,6 +193,25 @@ public class PredictionServiceImpl implements IPredictionService {
         return predictionRepository
                 .findByStatusOrderByWeekYearDescWeekNumberDesc(tn.esprit.pi.domain.PredictionStatus.PENDING)
                 .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    // ── Admin: list all predictions (pending + resolved) ──────────────────────
+    @Override
+    public List<PredictionResponse> getAllPredictions() {
+        return predictionRepository
+                .findAllByOrderByWeekYearDescWeekNumberDesc()
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    // ── Resolve all pending predictions for a specific week (triggered by match result) ──
+    @Override
+    public List<PredictionResponse> resolveWeekPredictions(int weekNumber, int weekYear) {
+        List<Prediction> pending = predictionRepository
+                .findByStatusAndWeekNumberAndWeekYear(PredictionStatus.PENDING, weekNumber, weekYear);
+        for (Prediction p : pending) {
+            resolveOnePrediction(p);
+        }
+        return pending.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     // ── Core resolution logic ─────────────────────────────────────────────────
@@ -272,6 +346,62 @@ public class PredictionServiceImpl implements IPredictionService {
         team.setWeekPoints(team.getWeekPoints() + total);
         team.setEarnedPoints(team.getEarnedPoints() + total);
         virtualTeamRepository.save(team);
+
+        // Credit earned points to team owner's wallet
+        walletService.creditFantasyPoints(team.getUser(), (int) Math.round(total));
+    }
+
+    // ── Admin stats ───────────────────────────────────────────────────────────
+    @Override
+    public FantasyStatsDto getAdminStats() {
+        int[] ww = currentWeek();
+        int weekNumber = ww[0];
+        int weekYear   = ww[1];
+
+        // Total points distributed this week
+        Double total = predictionRepository.sumPointsThisWeek(weekNumber, weekYear);
+
+        // Most predicted player
+        String mostPredicted = predictionRepository.mostPredictedPlayerName();
+
+        // Best prediction this week → need username from virtualTeam.user
+        FantasyStatsDto.BestPrediction best = null;
+        List<Object[]> top = predictionRepository.topPredictionThisWeek(weekNumber, weekYear);
+        if (!top.isEmpty()) {
+            Object[] row = top.get(0);
+            Long teamId = ((Number) row[0]).longValue();
+            double pts  = ((Number) row[1]).doubleValue();
+            String username = virtualTeamRepository.findById(teamId)
+                    .map(t -> t.getUser() != null ? t.getUser().getUsername() : "Unknown")
+                    .orElse("Unknown");
+            best = new FantasyStatsDto.BestPrediction(username, pts);
+        }
+
+        int activeTeams = (int) virtualTeamRepository.count();
+
+        return FantasyStatsDto.builder()
+                .totalPointsThisWeek(total != null ? total : 0.0)
+                .mostPredictedPlayer(mostPredicted != null ? mostPredicted : "—")
+                .bestPrediction(best)
+                .activeTeams(activeTeams)
+                .build();
+    }
+
+    // ── Leaderboard ───────────────────────────────────────────────────────────
+    @Override
+    public List<LeaderboardEntryDto> getLeaderboard() {
+        List<Object[]> rows = walletRepository.findLeaderboard();
+        List<LeaderboardEntryDto> result = new ArrayList<>();
+        for (int i = 0; i < rows.size(); i++) {
+            Object[] r = rows.get(i);
+            result.add(LeaderboardEntryDto.builder()
+                    .rank(i + 1)
+                    .username(r[0] != null ? r[0].toString() : "—")
+                    .email(r[1] != null ? r[1].toString() : "—")
+                    .walletPoints(((Number) r[2]).intValue())
+                    .build());
+        }
+        return result;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

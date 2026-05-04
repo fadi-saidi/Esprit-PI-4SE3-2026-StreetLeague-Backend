@@ -12,4 +12,9 @@ public interface ICommentService {
     Comment updateComment(Long id, String newContent);
     void deleteComment(Long id);
     List<Comment> getRepliesByCommentId(Long commentId);
+
+    // Moderation
+    List<Comment> getFlaggedComments();
+    Comment approveComment(Long id);
+    void rejectComment(Long id);
 }

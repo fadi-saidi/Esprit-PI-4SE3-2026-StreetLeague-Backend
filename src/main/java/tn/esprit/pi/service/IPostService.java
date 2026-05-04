@@ -8,7 +8,12 @@ public interface IPostService {
         PostDto createPost(Long userId, String content);
         List<PostDto> getAllPosts();
         Optional<PostDto> getPostById(Long id);
-        PostDto updatePost(Long id, String newContent);  // ✅ nom correct
+        PostDto updatePost(Long id, String newContent);
         void deletePost(Long id);
         List<PostDto> getPostsByUserId(Long userId);
+
+        // Moderation
+        List<PostDto> getFlaggedPosts();
+        PostDto approvePost(Long id);
+        void rejectPost(Long id);
 }

@@ -3,9 +3,15 @@ package tn.esprit.pi.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.pi.dto.CommentDto;
-import tn.esprit.pi.service.ICommentService;
 import tn.esprit.pi.domain.Comment;
+import tn.esprit.pi.domain.Post;
+import tn.esprit.pi.domain.User;
+import tn.esprit.pi.dto.CommentDto;
+import tn.esprit.pi.repository.CommentRepository;
+import tn.esprit.pi.repository.PostRepository;
+import tn.esprit.pi.repository.UserRepository;
+import tn.esprit.pi.service.ICommentService;
+import tn.esprit.pi.service.NotificationService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,19 +22,54 @@ import java.util.stream.Collectors;
 public class CommentController {
 
     private final ICommentService commentService;
+    private final NotificationService notificationService;
+    private final PostRepository postRepository;
+    private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
 
     @PostMapping
     public ResponseEntity<CommentDto> createComment(@RequestParam Long postId,
                                                     @RequestParam Long userId,
                                                     @RequestParam String content) {
-        return ResponseEntity.ok(toDto(commentService.createComment(postId, userId, content)));
+        Comment saved = commentService.createComment(postId, userId, content);
+
+        // Notify post owner — use fresh DB lookups, never navigate lazy fields
+        try {
+            Post post = postRepository.findById(postId).orElse(null);
+            User commenter = userRepository.findById(userId).orElse(null);
+            if (post != null && post.getUser() != null
+                    && commenter != null
+                    && !post.getUser().getId().equals(userId)) {
+                notificationService.notifyPostCommented(post.getUser(), commenter.getUsername(), postId);
+            }
+        } catch (Exception e) {
+            System.err.println("[CommentController] notification failed: " + e.getMessage());
+        }
+
+        return ResponseEntity.ok(toDto(saved));
     }
 
     @PostMapping("/reply")
     public ResponseEntity<CommentDto> replyToComment(@RequestParam Long parentCommentId,
                                                      @RequestParam Long userId,
                                                      @RequestParam String content) {
-        return ResponseEntity.ok(toDto(commentService.replyToComment(parentCommentId, userId, content)));
+        Comment saved = commentService.replyToComment(parentCommentId, userId, content);
+
+        // Notify parent comment owner — skip self-reply
+        try {
+            Comment parent = commentRepository.findById(parentCommentId).orElse(null);
+            User replier = userRepository.findById(userId).orElse(null);
+            if (parent != null && parent.getUser() != null
+                    && replier != null
+                    && !parent.getUser().getId().equals(userId)) {
+                Long postId = parent.getPost() != null ? parent.getPost().getId() : null;
+                notificationService.notifyCommentReplied(parent.getUser(), replier.getUsername(), postId);
+            }
+        } catch (Exception e) {
+            System.err.println("[CommentController] reply notification failed: " + e.getMessage());
+        }
+
+        return ResponseEntity.ok(toDto(saved));
     }
 
     @GetMapping("/post/{postId}")
@@ -60,7 +101,7 @@ public class CommentController {
         commentService.deleteComment(id);
         return ResponseEntity.noContent().build();
     }
-    // GET /comments/{id}/replies
+
     @GetMapping("/{id}/replies")
     public ResponseEntity<List<CommentDto>> getReplies(@PathVariable Long id) {
         return ResponseEntity.ok(
@@ -70,7 +111,7 @@ public class CommentController {
                         .collect(Collectors.toList())
         );
     }
-    // ✅ mapper
+
     private CommentDto toDto(Comment comment) {
         CommentDto dto = new CommentDto();
         dto.setId(comment.getId());

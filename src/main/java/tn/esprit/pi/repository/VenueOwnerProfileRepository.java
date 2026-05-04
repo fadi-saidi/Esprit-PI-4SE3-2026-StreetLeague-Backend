@@ -10,7 +10,6 @@ import tn.esprit.pi.domain.VenueOwnerProfile;
 import java.util.Optional;
 @Repository
 
-
 public interface VenueOwnerProfileRepository extends JpaRepository<VenueOwnerProfile, Long> {
     Optional<VenueOwnerProfile> findByUserId(Long userId);
 
